@@ -1,0 +1,37 @@
+[gd_scene load_steps=7 format=3 uid="uid://cda5264lur40m"]
+
+[ext_resource type="Shader" path="res://scripts/textmode_sprite.gdshader" id="1_c6mwg"]
+[ext_resource type="Script" path="res://scripts/sub_viewport.gd" id="1_pxddh"]
+[ext_resource type="Texture2D" uid="uid://dn2lnufaj6f6t" path="res://assets/mrmotext_x3.png" id="2_8o0gn"]
+[ext_resource type="Script" path="res://scripts/motley.gd" id="4_e10u3"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_g16xp"]
+viewport_path = NodePath("SubViewport")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_une5n"]
+shader = ExtResource("1_c6mwg")
+shader_parameter/colors_fore = null
+shader_parameter/colors_back = null
+shader_parameter/canvas_size = null
+shader_parameter/tile_size = null
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = SubResource("ViewportTexture_g16xp")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+disable_3d = true
+transparent_bg = true
+size = Vector2i(480, 288)
+render_target_update_mode = 4
+script = ExtResource("1_pxddh")
+
+[node name="TextModeSprite" type="Node2D" parent="SubViewport"]
+material = SubResource("ShaderMaterial_une5n")
+script = ExtResource("4_e10u3")
+tilemap = ExtResource("2_8o0gn")
+tile_size = Vector2i(24, 24)
+
+[node name="TODO" type="Node" parent="."]
+editor_description = "- Read TileMap implementation"
