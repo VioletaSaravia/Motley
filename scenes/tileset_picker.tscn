@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://7p1324a7ovt5"]
+
+[node name="TilesetPicker" type="FileDialog"]
+auto_translate_mode = 1
+title = "Open a File"
+position = Vector2i(0, 36)
+size = Vector2i(275, 350)
+visible = true
+ok_button_text = "Open"
+file_mode = 0
+filters = PackedStringArray("*.png, *.jpg")
