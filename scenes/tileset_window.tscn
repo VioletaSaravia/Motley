@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://cccrqluebea0u"]
+
+[node name="TilesetWindow" type="Window"]
+position = Vector2i(100, 400)
+
+[node name="TextureRect" type="TextureRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+stretch_mode = 4

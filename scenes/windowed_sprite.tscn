@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://buax6rann82as"]
+
+[ext_resource type="Script" path="res://addons/motley/scripts/textmode_sprite.gd" id="1_x27s7"]
+
+[node name="Window" type="Window"]
+initial_position = 1
+size = Vector2i(300, 200)
+
+[node name="TextModeSprite" type="Sprite2D" parent="."]
+position = Vector2(150, 100)
+script = ExtResource("1_x27s7")

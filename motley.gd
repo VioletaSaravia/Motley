@@ -6,7 +6,7 @@ var known_tilesets: Dictionary = {
 	"res://addons/motley/assets/microbe-2.png": Vector2i(16, 16)
 }
 
-var new_window_script := preload("res://addons/motley/scenes/new_tilemap_window.tscn")
+# var new_window_script := preload("res://addons/motley/scenes/new_tilemap_window.tscn")
 
 func _exit_tree() -> void:
 	pass

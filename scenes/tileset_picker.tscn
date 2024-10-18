@@ -4,7 +4,7 @@
 auto_translate_mode = 1
 title = "Open a File"
 position = Vector2i(0, 36)
-size = Vector2i(275, 350)
+size = Vector2i(303, 350)
 visible = true
 ok_button_text = "Open"
 file_mode = 0
