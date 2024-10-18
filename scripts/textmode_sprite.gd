@@ -52,7 +52,7 @@ var fore_tex: ImageTexture
 var back_tex: ImageTexture
 
 func _set_viewport_size() -> void:
-	viewport.size = Vector2(tile_size.x * size.x, tile_size.y * size.y)
+	viewport.size = Vector2(tile_size.x * size.x * scale.x, tile_size.y * size.y * scale.y)
 
 func save_png() -> void:
 	texture.get_image().save_png("res://assets/sprite.png")
@@ -82,6 +82,12 @@ func _start_editing() -> void:
 	size = Vector2(
 		int(window.get_node("%TilemapWidth").text), 
 		int(window.get_node("%TilemapHeight").text))
+	tileset = load(window.get_node("%TilesetPath").text)
+	tile_size = Vector2(
+		int(window.get_node("%TileSizeX").text), 
+		int(window.get_node("%TileSizeY").text))
+	position += Vector2(size.x * tile_size.x / 2, size.y * tile_size.y / 2)
+	#scale = Vector2(2, 2) # TODO
 	
 	viewport = SubViewport.new()
 	viewport.transparent_bg = true
@@ -96,11 +102,6 @@ func _start_editing() -> void:
 	mouse.s = self
 	mouse.material = ShaderMaterial.new()
 	mouse.material.shader = mouse_shader
-	
-	tileset = load(window.get_node("%TilesetPath").text)
-	tile_size = Vector2(
-		int(window.get_node("%TileSizeX").text), 
-		int(window.get_node("%TileSizeY").text))
 	
 	fore_colors = Image.create(
 		size.x * tile_size.x, size.y * tile_size.y, 
@@ -170,8 +171,6 @@ func _set_mouse_tile() -> void:
 func _update_editor() -> void:
 	sprite.queue_redraw()
 	mouse.queue_redraw()
-	
-	#if Input.is_key_pressed(KEY_SPACE): save_png()
 	
 	_set_mouse_tile()
 	
