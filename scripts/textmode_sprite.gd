@@ -1,6 +1,9 @@
 @tool
 class_name TextModeSprite extends Sprite2D
 
+enum TileRotation { UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3 }
+enum BrushType { SINGLE, LINE, RECTANGLE, PIXEL }
+
 enum STATE { NotStarted, Editing, Baked }
 var state := STATE.NotStarted
 
@@ -13,21 +16,35 @@ var state := STATE.NotStarted
 @export var tile_size: Vector2i
 
 @export_category("Toolbar")
-# TODO Move to top toolbar?
 @export var selected_tile := Vector2.ZERO:
+	get: return toolbar.selected_tile if toolbar else selected_tile
 	set(val): if val.x >= 0 && val.y >= 0: selected_tile = val
 @export var selected_rotation := TileRotation.UP
 var mouse_tile: Vector2
 
-@export var foreground_color := Color.WHITE
-@export var transparent_foreground := false
-@export var background_color := Color.BLACK
-@export var transparent_background := false
-@export var brush := BrushType.SINGLE
-@export var paint_tile := true
-@export var paint_foreground := true
-@export var paint_background := true
-@export var paint_rotation := true
+@onready var toolbar := get_tree().get_root().get_child(0).get_node("%Toolbar")\
+	if !Engine.is_editor_hint()\
+	else null
+
+var foreground_color := Color.WHITE:
+	get: return toolbar.get_foreground_color()
+var transparent_foreground := false:
+	get: return toolbar.is_foreground_alpha()
+var background_color := Color.BLACK:
+	get: return toolbar.get_background_color()
+var transparent_background := false:
+	get: return toolbar.is_background_alpha()
+var brush := BrushType.SINGLE:
+	get: return toolbar.get_brush()
+var paint_tile := true:
+	get: return toolbar.is_paint_tile_on()
+var paint_foreground := true:
+	get: return toolbar.is_paint_foreground_on()
+var paint_background := true:
+	get: return toolbar.is_paint_background_on()
+var paint_rotation := true:
+	get: return toolbar.is_paint_rotation_on()
+
 @export var bake := false:
 	set(val):
 		if state == STATE.NotStarted: return
@@ -40,9 +57,6 @@ var mouse_tile: Vector2
 		
 		bake = val
 
-enum TileRotation { UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3 }
-enum BrushType { SINGLE, LINE, RECTANGLE, PIXEL }
-
 # Rendering data
 var tiles: Array[Array] # of Vector2
 var rotations: Array[Array] # of TileRotation
@@ -53,6 +67,32 @@ var back_tex: ImageTexture
 
 func _set_viewport_size() -> void:
 	viewport.size = Vector2(tile_size.x * size.x * scale.x, tile_size.y * size.y * scale.y)
+
+func zoom_in() -> void:
+	if state != STATE.Editing: return
+	
+	scale *= 2
+	position += Vector2(
+		size.x * tile_size.x / 4 * scale.x,
+		size.y * tile_size.y / 4 * scale.y)
+	
+func zoom_out() -> void:
+	if state != STATE.Editing: return
+	
+	scale /= 2
+	position -= Vector2(
+		size.x * tile_size.x / 2 * scale.x,
+		size.y * tile_size.y / 2 * scale.y)
+
+var uid := str(ResourceUID.create_id())
+var sprite_name := ""
+
+func save_tilemap() -> void:
+	if state != STATE.Editing: return
+	
+	var saved := PackedScene.new()
+	saved.pack(sprite)
+	ResourceSaver.save(saved, "res://scenes/textmode_sprite_" + uid + ".tscn")
 
 func save_png() -> void:
 	texture.get_image().save_png("res://assets/sprite.png")
@@ -179,5 +219,4 @@ func _update_editor() -> void:
 			_place_tile()
 
 func _process(_delta: float) -> void:
-	if state == STATE.Editing:
-		_update_editor()
+	if state == STATE.Editing: _update_editor()

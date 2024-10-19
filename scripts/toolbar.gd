@@ -3,26 +3,34 @@ extends Window
 
 enum BrushType { SINGLE, LINE, PIXEL, RECT }
 @onready var brush_group := ButtonGroup.new()
-@onready var color_fore_group := ButtonGroup.new()
-@onready var color_back_group := ButtonGroup.new()
 
 func get_brush() -> BrushType:
-	var name := brush_group.get_pressed_button().name
-	
-	if name == "PaintLineButton":
-		return BrushType.LINE
-	if name == "PaintPixelButton":
-		return BrushType.PIXEL
-	if name == "PaintRectButton":
-		return BrushType.RECT
-	
-	return BrushType.SINGLE
+	match brush_group.get_pressed_button().name:
+		"PaintLineButton": return BrushType.LINE
+		"PaintPixelButton": return BrushType.PIXEL
+		"PaintRectButton": return BrushType.RECT
+		_: return BrushType.SINGLE
+
+var fg_selected := 0
+var bg_selected := 1
+
+var tile_size: Vector2i
+
+# TODO
+var palette_count := 8
+
+@onready var palette := [
+	%PaletteColor01, %PaletteColor02, %PaletteColor03, %PaletteColor04, 
+	%PaletteColor05, %PaletteColor06, %PaletteColor07, %PaletteColor08
+]
 
 func get_foreground_color() -> Color:
-	return Color.WHITE
+	return ((palette[fg_selected] as Panel)
+		.get_theme_stylebox("panel") as StyleBoxFlat).bg_color
 	
 func get_background_color() -> Color:
-	return Color.BLACK
+	return ((palette[bg_selected] as Panel)
+		.get_theme_stylebox("panel") as StyleBoxFlat).bg_color
 
 func is_paint_tile_on() -> bool:
 	return %PaintTileButton.button_pressed
@@ -42,18 +50,7 @@ func is_foreground_alpha() -> bool:
 func is_background_alpha() -> bool:
 	return %BackAlphaButton.button_pressed
 
-var foreground_selected := 0
-var background_selected := 0
-
-@onready var palette_fore := [
-	%PaletteColor01, %PaletteColor02, %PaletteColor03, %PaletteColor04, 
-	%PaletteColor05, %PaletteColor06, %PaletteColor07, %PaletteColor08
-]
-	
-@onready var palette_back := [
-	%PaletteColor09, %PaletteColor10, %PaletteColor11, %PaletteColor12, 
-	%PaletteColor13, %PaletteColor14, %PaletteColor15, %PaletteColor16
-]
+var selected_tile := Vector2.ZERO
 
 func _ready() -> void:
 	unresizable = true
@@ -64,19 +61,48 @@ func _ready() -> void:
 	%PaintSingleButton.button_pressed = true
 	size = %MarginContainer.size
 	
-	for i in palette_fore:
-		i = i as ColorPickerButton
-		i.button_group = color_fore_group
-	for i in palette_back:
-		i = i as ColorPickerButton
-		i.button_group = color_back_group
-	
-	var margins := get_child(0) as MarginContainer
-	var margin_value = 5
-	margins.add_theme_constant_override("margin_top", margin_value)
-	margins.add_theme_constant_override("margin_left", margin_value)
-	margins.add_theme_constant_override("margin_bottom", margin_value)
-	margins.add_theme_constant_override("margin_right", margin_value)
+	for i in range(2, len(palette)):
+		palette[i].get_theme_stylebox("panel").bg_color = Color(randf(), randf(), randf(), 1)
+
+func _set_border(box: StyleBoxFlat, px: int, color: Color = Color.BLACK) -> void:
+	box.border_width_left = px
+	box.border_width_right = px
+	box.border_width_top = px
+	box.border_width_bottom = px
+	if color != Color.BLACK:
+		box.border_color = color
 
 func _process(delta: float) -> void:
 	size = %MarginContainer.size
+	
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		if Rect2(%Tileset.global_position, %Tileset.size).has_point(%Tileset.get_global_mouse_position()):
+			var pos: Vector2 = %Tileset.get_global_mouse_position() - %Tileset.global_position
+			pos.x -= 28
+			pos = Vector2(
+				floor(pos.x / tile_size.x) * tile_size.x,
+				floor(pos.y / tile_size.y) * tile_size.y)
+			selected_tile = Vector2(pos.x / tile_size.x, pos.y / tile_size.y)
+		
+		for i in range(len(palette)):
+			var panel := palette[i] as Panel
+			if Rect2(panel.global_position, panel.size).has_point(panel.get_global_mouse_position()):
+				fg_selected = i
+				break
+	
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		for i in range(len(palette)):
+			var panel := palette[i] as Panel
+			if Rect2(panel.global_position, panel.size).has_point(panel.get_global_mouse_position()):
+				bg_selected = i
+				break
+
+	for i in range(len(palette)):
+		_set_border(palette[i].get_theme_stylebox("panel"), 0)
+	
+	if bg_selected == fg_selected:
+		_set_border(palette[bg_selected].get_theme_stylebox("panel"), 
+			2, (Color.CRIMSON + Color.LIME_GREEN) * 0.75)
+	else:
+		_set_border(palette[bg_selected].get_theme_stylebox("panel"), 2, Color.CRIMSON)
+		_set_border(palette[fg_selected].get_theme_stylebox("panel"), 2, Color.LIME_GREEN)

@@ -1,10 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://eoiitxedq7"]
+[gd_scene load_steps=3 format=3 uid="uid://eoiitxedq7"]
 
 [ext_resource type="Script" path="res://addons/motley/scripts/new_tilemap_window.gd" id="1_1gymu"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pkjmp"]
+bg_color = Color(0.254902, 0.254902, 0.254902, 1)
 
 [node name="NewTilemapContainer" type="PanelContainer"]
 offset_right = 204.0
 offset_bottom = 136.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_pkjmp")
 script = ExtResource("1_1gymu")
 metadata/_edit_use_anchors_ = true
 
