@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://cyicfc5g05t5l"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_nudo3"]
+
+[node name="Control" type="Label"]
+offset_right = 358.0
+offset_bottom = 23.0
+text = "Configure the sprite in the top bar to initialize."
+label_settings = SubResource("LabelSettings_nudo3")
+horizontal_alignment = 1

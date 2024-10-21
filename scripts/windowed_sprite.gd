@@ -33,4 +33,5 @@ func _process(delta: float) -> void:
 			if sprite.window.tileset_picker == null or !is_instance_valid(sprite.window.tileset_picker):
 				size = sprite.window.size + Vector2(0, %WindowToolbar.size.y)
 			else:
-				size = Vector2((sprite.window.tileset_picker as FileDialog).size) + Vector2(0, %WindowToolbar.size.y)
+				size = Vector2((sprite.window.tileset_picker as FileDialog).size)\
+					+ Vector2(0, %WindowToolbar.size.y)

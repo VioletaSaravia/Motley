@@ -1,9 +1,11 @@
 @tool
 extends Node2D
 
-@onready var s: TextModeSprite
+var s: TextModeSprite
 
 func _draw() -> void:
+	if not s: return
+	
 	material.set_shader_parameter("fore_colors", s.fore_tex)
 	material.set_shader_parameter("back_colors", s.back_tex)
 	

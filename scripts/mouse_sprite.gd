@@ -1,8 +1,10 @@
 extends Node2D
 
-@onready var s: TextModeSprite
+var s: TextModeSprite
 
 func _draw() -> void:
+	if not s: return
+	
 	if Rect2(0, 0, s.size.x, s.size.y).has_point(s.mouse_tile):
 		material.set_shader_parameter("foreground", s.foreground_color)
 		material.set_shader_parameter("background", s.background_color)

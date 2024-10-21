@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3 uid="uid://mepujcjbqxvi"]
+
+[ext_resource type="Shader" path="res://addons/motley/shaders/mouse_sprite.gdshader" id="1_j6jhc"]
+[ext_resource type="Script" path="res://addons/motley/scripts/mouse_sprite.gd" id="2_x86ed"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_64ub7"]
+shader = ExtResource("1_j6jhc")
+shader_parameter/foreground = null
+shader_parameter/background = null
+
+[node name="MouseSprite" type="Node2D"]
+material = SubResource("ShaderMaterial_64ub7")
+script = ExtResource("2_x86ed")

@@ -1,6 +1,7 @@
 @tool
 extends Window
 
+enum TileRotation { UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3 }
 enum BrushType { SINGLE, LINE, PIXEL, RECT }
 @onready var brush_group := ButtonGroup.new()
 
