@@ -2,6 +2,8 @@
 class_name TextModeSprite extends Sprite2D
 
 ### STATE VARIABLES ###
+
+var sprite_name := ""
 # TODO in editor, out of editor and standalone are three different states.
 @onready var toolbar := $/root/Main/Toolbar if !Engine.is_editor_hint() else null
 var foreground_color := Color.WHITE:
@@ -31,13 +33,13 @@ var selected_rotation := 0:
 
 enum STATE { NotStarted, Editing, Baked }
 var state := STATE.NotStarted
-var size: Vector2i = Vector2i(10, 10):
+var size: Vector2i = Vector2i(1, 1):
 	set(val): if state == STATE.NotStarted: size = val
 var tileset: Texture
 var tile_size: Vector2i
 
 ### RENDERING ###
-var viewport_scene := preload("res://addons/motley/scenes/tilemap_viewport.tscn")
+
 var viewport: SubViewport
 var sprite: Node2D
 var mouse_sprite: Node2D
@@ -50,13 +52,16 @@ var fore_tex: ImageTexture
 var back_tex: ImageTexture
 
 ### MENU SCRIPTS ###
-var new_msg_scene := preload("res://addons/motley/scenes/new_textmode_sprite_msg.tscn")
+
 var new_msg: Label
-var new_window_scene := preload("res://addons/motley/scenes/new_tilemap_window.tscn")
-var tileset_picker := preload("res://addons/motley/scenes/tileset_picker.tscn")
 var window: Control
 
+var save_dialog: FileDialog
+var load_dialog: FileDialog
+var export_dialog: FileDialog
+
 ### HELPER FUNCTIONS ###
+
 func zoom_in() -> void:
 	if state != STATE.Editing: return
 	
@@ -73,10 +78,19 @@ func zoom_out() -> void:
 		size.x * tile_size.x / 2 * scale.x,
 		size.y * tile_size.y / 2 * scale.y)
 
-# TODO Save dialogs
-var uid := str(ResourceUID.create_id())
-var sprite_name := ""
-func save_tilemap() -> void:
+func open_save_dialog() -> void:
+	if state == STATE.NotStarted: return
+	
+	save_dialog = motley.save_dialog.instantiate()
+	add_child(save_dialog)
+	save_dialog.file_selected.connect(save_tilemap)
+	
+func open_load_dialog() -> void:
+	load_dialog = motley.load_dialog.instantiate()
+	add_child(load_dialog)
+	load_dialog.file_selected.connect(load_tilemap)
+
+func save_tilemap(path: String) -> void:
 	if state != STATE.Editing: return
 	
 	var saved := SavedCharmap.new()
@@ -90,8 +104,9 @@ func save_tilemap() -> void:
 	saved.fore_tex = fore_tex
 	saved.back_tex = back_tex
 	
-	ResourceSaver.save(saved, "res://resources/charmap"+str(ResourceUID.create_id())+".tres")
-	# TODO confirmation
+	ResourceSaver.save(saved, path)
+	sprite_name = path
+	if save_dialog: save_dialog.queue_free()
 	
 var loaded: SavedCharmap
 func load_tilemap(path: String) -> void:
@@ -103,7 +118,7 @@ func load_tilemap(path: String) -> void:
 	position += Vector2(size.x * tile_size.x / 2, size.y * tile_size.y / 2)
 	#scale = Vector2(2, 2) # TODO
 	
-	viewport = viewport_scene.instantiate()
+	viewport = motley.viewport.instantiate()
 	sprite = viewport.get_node("%Sprite")
 	sprite.s = self
 	mouse_sprite = viewport.get_node("%MouseSprite")
@@ -123,11 +138,34 @@ func load_tilemap(path: String) -> void:
 	texture_filter = TEXTURE_FILTER_NEAREST
 	
 	state = STATE.Editing
-	if window != null: window.queue_free()
-	if new_msg != null: new_msg.queue_free()
+	sprite_name = path
+	if window: window.queue_free()
+	if new_msg: new_msg.queue_free()
+	if load_dialog: load_dialog.queue_free()
 
-func save_png() -> void:
-	texture.get_image().save_png("res://assets/sprite.png")
+func open_export_dialog() -> void:
+	if state == STATE.NotStarted: return
+	
+	export_dialog = motley.export_dialog.instantiate()
+	add_child(export_dialog)
+	export_dialog.file_selected.connect(export_charmap)
+
+func export_charmap(path: String) -> void:
+	(viewport.get_node("%MouseSprite") as Node2D).visible = false
+	# Horrible delay to allow MouseSprite to become invisible
+	await get_tree().create_timer(0.2).timeout
+	var img := viewport.get_texture().get_image()
+
+	match path.get_extension():
+		"png": img.save_png(path)
+		"jpg", "jpeg": img.save_jpg(path)
+		"exr": img.save_exr(path)
+		"webp": img.save_webp(path)
+		"": push_warning("Please select a file type for exporting")
+		_: push_warning("Unsupported file type: "+path.get_extension())
+	
+	(viewport.get_node("%MouseSprite") as Node2D).visible = true
+	if export_dialog: export_dialog.queue_free()
 
 ### INIT ###
 
@@ -142,7 +180,7 @@ func _start_editing() -> void:
 	position += Vector2(size.x * tile_size.x / 2, size.y * tile_size.y / 2)
 	#scale = Vector2(2, 2) # TODO
 	
-	viewport = viewport_scene.instantiate()
+	viewport = motley.viewport.instantiate()
 	sprite = viewport.get_node("%Sprite")
 	sprite.s = self
 	mouse_sprite = viewport.get_node("%MouseSprite")
@@ -172,15 +210,16 @@ func _start_editing() -> void:
 	state = STATE.Editing
 	if window != null: window.queue_free()
 	if new_msg != null: new_msg.queue_free()
+	if load_dialog: load_dialog.queue_free()
 
 func _ready() -> void:
 	if state != STATE.NotStarted: return
 	
 	if Engine.is_editor_hint():
-		new_msg = new_msg_scene.instantiate()
+		new_msg = motley.new_msg.instantiate()
 		add_child(new_msg)
 	else:
-		window = new_window_scene.instantiate()
+		window = motley.new_window.instantiate()
 		add_child(window)
 		(window.get_node("%CreateButton") as Button).pressed.connect(_start_editing)
 

@@ -3,7 +3,7 @@ extends Node2D
 var s: TextModeSprite
 
 func _draw() -> void:
-	if not s: return
+	if not s or not visible: return
 	
 	if Rect2(0, 0, s.size.x, s.size.y).has_point(s.mouse_tile):
 		material.set_shader_parameter("foreground", s.foreground_color)

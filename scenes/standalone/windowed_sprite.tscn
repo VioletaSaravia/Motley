@@ -13,7 +13,7 @@ corner_detail = 1
 gui_embed_subwindows = true
 title = "New tilemap"
 initial_position = 1
-size = Vector2i(204, 264)
+size = Vector2i(204, 360)
 unresizable = true
 script = ExtResource("1_l8pdp")
 
@@ -36,6 +36,7 @@ icon = ExtResource("2_4nj5d")
 flat = true
 
 [node name="ExportButton" type="Button" parent="WindowToolbar/HBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 icon = ExtResource("3_k1yji")
 flat = true

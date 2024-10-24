@@ -16,7 +16,7 @@
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hb0tn"]
 bg_color = Color(0.254902, 0.254902, 0.254902, 1)
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_82xxl"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_18dfu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s47ra"]
 bg_color = Color(1, 1, 1, 1)
@@ -43,7 +43,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_57qit"]
-bg_color = Color(0.867323, 0.118865, 0.0983033, 1)
+bg_color = Color(0.206904, 0.89751, 0.89536, 1)
 border_color = Color(0, 1, 0, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -51,7 +51,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q645u"]
-bg_color = Color(0.602051, 0.60364, 0.797755, 1)
+bg_color = Color(0.290598, 0.786265, 0.698826, 1)
 border_color = Color(0.196078, 0.803922, 0.196078, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -59,7 +59,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_aja1r"]
-bg_color = Color(0.840352, 0.826445, 0.948173, 1)
+bg_color = Color(0.43494, 0.77173, 0.205616, 1)
 border_color = Color(0, 1, 0, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -67,7 +67,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r7ve0"]
-bg_color = Color(0.307489, 0.973084, 0.0668205, 1)
+bg_color = Color(0.295126, 0.842658, 0.204699, 1)
 border_color = Color(0, 1, 0, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -75,7 +75,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f7juk"]
-bg_color = Color(0.788608, 0.927769, 0.458718, 1)
+bg_color = Color(0.363081, 0.983026, 0.441013, 1)
 border_color = Color(0.196078, 0.803922, 0.196078, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -83,7 +83,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wpjvq"]
-bg_color = Color(0.120996, 0.562816, 0.312801, 1)
+bg_color = Color(0.660534, 0.860198, 0.0583805, 1)
 border_color = Color(0.196078, 0.803922, 0.196078, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -145,7 +145,7 @@ tooltip_text = "Paint a single tile at a time."
 toggle_mode = true
 button_pressed = true
 action_mode = 0
-button_group = SubResource("ButtonGroup_82xxl")
+button_group = SubResource("ButtonGroup_18dfu")
 icon = ExtResource("5_g64qg")
 
 [node name="PaintLineButton" type="Button" parent="MarginContainer/MainToolbarContainer/BrushButtonsContainer"]
@@ -154,7 +154,7 @@ layout_mode = 2
 tooltip_text = "Paint lines of tiles by holding and dragging."
 toggle_mode = true
 action_mode = 0
-button_group = SubResource("ButtonGroup_82xxl")
+button_group = SubResource("ButtonGroup_18dfu")
 icon = ExtResource("6_6jabn")
 
 [node name="PaintPixelButton" type="Button" parent="MarginContainer/MainToolbarContainer/BrushButtonsContainer"]
@@ -163,7 +163,7 @@ layout_mode = 2
 tooltip_text = "Paint single pixels on top of the tilemap."
 toggle_mode = true
 action_mode = 0
-button_group = SubResource("ButtonGroup_82xxl")
+button_group = SubResource("ButtonGroup_18dfu")
 icon = ExtResource("7_ubl6a")
 
 [node name="PaintRectButton" type="Button" parent="MarginContainer/MainToolbarContainer/BrushButtonsContainer"]
@@ -171,7 +171,7 @@ unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 action_mode = 0
-button_group = SubResource("ButtonGroup_82xxl")
+button_group = SubResource("ButtonGroup_18dfu")
 icon = ExtResource("8_66io8")
 
 [node name="HBoxContainer3" type="HBoxContainer" parent="MarginContainer/MainToolbarContainer"]

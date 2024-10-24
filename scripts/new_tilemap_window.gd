@@ -1,7 +1,7 @@
 @tool
 extends Control
 
-var tileset_picker_scene := preload("res://addons/motley/scenes/tileset_picker.tscn")
+var tileset_picker_scene := preload("res://addons/motley/scenes/dialogs/tileset_picker.tscn")
 var tileset_picker: FileDialog
 
 func _pick_tileset() -> void:

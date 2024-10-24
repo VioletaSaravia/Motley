@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://c08lnqrxm3ehd"]
+
+[node name="LoadCharmap" type="FileDialog"]
+title = "Open a File"
+position = Vector2i(0, 36)
+size = Vector2i(303, 380)
+visible = true
+unresizable = true
+borderless = true
+ok_button_text = "Open"
+file_mode = 0
+filters = PackedStringArray("*.tres")
