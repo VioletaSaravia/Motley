@@ -1,11 +1,17 @@
-[gd_scene load_steps=5 format=3 uid="uid://2dui1mfadb6l"]
+[gd_scene load_steps=7 format=3 uid="uid://2dui1mfadb6l"]
 
 [ext_resource type="Shader" path="res://addons/motley/shaders/textmode_sprite.gdshader" id="1_4n8c0"]
 [ext_resource type="Script" path="res://addons/motley/scripts/textmode_sprite_internal.gd" id="2_esfa1"]
-[ext_resource type="PackedScene" uid="uid://mepujcjbqxvi" path="res://addons/motley/scenes/mouse_sprite.tscn" id="3_lqcpd"]
+[ext_resource type="Shader" path="res://addons/motley/shaders/mouse_sprite.gdshader" id="3_rars3"]
+[ext_resource type="Script" path="res://addons/motley/scripts/mouse_sprite.gd" id="4_kk4wy"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0qxsu"]
 shader = ExtResource("1_4n8c0")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_64ub7"]
+shader = ExtResource("3_rars3")
+shader_parameter/foreground = null
+shader_parameter/background = null
 
 [node name="TilemapViewport" type="SubViewport"]
 transparent_bg = true
@@ -16,5 +22,7 @@ unique_name_in_owner = true
 material = SubResource("ShaderMaterial_0qxsu")
 script = ExtResource("2_esfa1")
 
-[node name="MouseSprite" parent="." instance=ExtResource("3_lqcpd")]
+[node name="MouseSprite" type="Node2D" parent="."]
 unique_name_in_owner = true
+material = SubResource("ShaderMaterial_64ub7")
+script = ExtResource("4_kk4wy")

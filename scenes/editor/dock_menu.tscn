@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3 uid="uid://d0k7p48utp45l"]
+
+[ext_resource type="PackedScene" uid="uid://eoiitxedq7" path="res://addons/motley/scenes/new_tilemap_window.tscn" id="1_bcy6c"]
+[ext_resource type="PackedScene" uid="uid://2dui1mfadb6l" path="res://addons/motley/scenes/tilemap_viewport.tscn" id="2_yf8mj"]
+
+[node name="DockMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HSplitContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 728.0
+offset_bottom = 512.0
+
+[node name="NewTilemapContainer" parent="HSplitContainer" instance=ExtResource("1_bcy6c")]
+layout_mode = 2
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="HSplitContainer"]
+layout_mode = 2
+
+[node name="TilemapViewport" parent="HSplitContainer/SubViewportContainer" instance=ExtResource("2_yf8mj")]
+handle_input_locally = false
+render_target_update_mode = 4

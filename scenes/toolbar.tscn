@@ -1,10 +1,8 @@
-[gd_scene load_steps=25 format=3 uid="uid://di2xwths20jd6"]
+[gd_scene load_steps=23 format=3 uid="uid://di2xwths20jd6"]
 
 [ext_resource type="Texture2D" uid="uid://dpdcfyqyyu87b" path="res://addons/motley/assets/add_box_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="1_b6vq4"]
 [ext_resource type="Script" path="res://addons/motley/scripts/toolbar.gd" id="1_fw5ki"]
-[ext_resource type="Texture2D" uid="uid://r8uvc8uorbks" path="res://addons/motley/assets/save_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="2_bj3a3"]
-[ext_resource type="Texture2D" uid="uid://cxk4pxh5fcare" path="res://addons/motley/assets/oven_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="3_hpxic"]
-[ext_resource type="Texture2D" uid="uid://oncdatnie37m" path="res://addons/motley/assets/file_export_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="4_mvhm5"]
+[ext_resource type="Texture2D" uid="uid://bamjakjq7u203" path="res://addons/motley/assets/file_open_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="3_3r4qa"]
 [ext_resource type="Texture2D" uid="uid://na5xy3fi1fcc" path="res://addons/motley/assets/brush_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="5_g64qg"]
 [ext_resource type="Texture2D" uid="uid://ehfy334pu04g" path="res://addons/motley/assets/polyline_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="6_6jabn"]
 [ext_resource type="Texture2D" uid="uid://dclv3cj7a2pj0" path="res://addons/motley/assets/warning_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="7_ubl6a"]
@@ -18,7 +16,7 @@
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hb0tn"]
 bg_color = Color(0.254902, 0.254902, 0.254902, 1)
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_w4sfi"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_82xxl"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s47ra"]
 bg_color = Color(1, 1, 1, 1)
@@ -45,7 +43,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_57qit"]
-bg_color = Color(0.586581, 0.25922, 0.32802, 1)
+bg_color = Color(0.867323, 0.118865, 0.0983033, 1)
 border_color = Color(0, 1, 0, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -53,7 +51,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q645u"]
-bg_color = Color(0.119763, 0.885349, 0.28609, 1)
+bg_color = Color(0.602051, 0.60364, 0.797755, 1)
 border_color = Color(0.196078, 0.803922, 0.196078, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -61,7 +59,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_aja1r"]
-bg_color = Color(0.0313221, 0.862414, 0.256874, 1)
+bg_color = Color(0.840352, 0.826445, 0.948173, 1)
 border_color = Color(0, 1, 0, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -69,7 +67,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r7ve0"]
-bg_color = Color(0.512604, 0.621413, 0.956614, 1)
+bg_color = Color(0.307489, 0.973084, 0.0668205, 1)
 border_color = Color(0, 1, 0, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -77,7 +75,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f7juk"]
-bg_color = Color(0.571215, 0.703743, 0.708219, 1)
+bg_color = Color(0.788608, 0.927769, 0.458718, 1)
 border_color = Color(0.196078, 0.803922, 0.196078, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -85,7 +83,7 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wpjvq"]
-bg_color = Color(0.189745, 0.751349, 0.810065, 1)
+bg_color = Color(0.120996, 0.562816, 0.312801, 1)
 border_color = Color(0.196078, 0.803922, 0.196078, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -126,28 +124,12 @@ tooltip_text = "Create a new tilemap."
 action_mode = 0
 icon = ExtResource("1_b6vq4")
 
-[node name="SaveProjectButton" type="Button" parent="MarginContainer/MainToolbarContainer/OptionsContainer"]
+[node name="OpenButton" type="Button" parent="MarginContainer/MainToolbarContainer/OptionsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 action_mode = 0
-icon = ExtResource("2_bj3a3")
-
-[node name="BakeButton" type="Button" parent="MarginContainer/MainToolbarContainer/OptionsContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 0
-tooltip_text = "Bake a tilemap to a sprite."
-action_mode = 0
-icon = ExtResource("3_hpxic")
-
-[node name="ExportButton" type="Button" parent="MarginContainer/MainToolbarContainer/OptionsContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 0
-tooltip_text = "Export the tilemap to a file."
-action_mode = 0
-icon = ExtResource("4_mvhm5")
+icon = ExtResource("3_3r4qa")
 
 [node name="HSeparator" type="HSeparator" parent="MarginContainer/MainToolbarContainer"]
 layout_mode = 2
@@ -163,7 +145,7 @@ tooltip_text = "Paint a single tile at a time."
 toggle_mode = true
 button_pressed = true
 action_mode = 0
-button_group = SubResource("ButtonGroup_w4sfi")
+button_group = SubResource("ButtonGroup_82xxl")
 icon = ExtResource("5_g64qg")
 
 [node name="PaintLineButton" type="Button" parent="MarginContainer/MainToolbarContainer/BrushButtonsContainer"]
@@ -172,7 +154,7 @@ layout_mode = 2
 tooltip_text = "Paint lines of tiles by holding and dragging."
 toggle_mode = true
 action_mode = 0
-button_group = SubResource("ButtonGroup_w4sfi")
+button_group = SubResource("ButtonGroup_82xxl")
 icon = ExtResource("6_6jabn")
 
 [node name="PaintPixelButton" type="Button" parent="MarginContainer/MainToolbarContainer/BrushButtonsContainer"]
@@ -181,7 +163,7 @@ layout_mode = 2
 tooltip_text = "Paint single pixels on top of the tilemap."
 toggle_mode = true
 action_mode = 0
-button_group = SubResource("ButtonGroup_w4sfi")
+button_group = SubResource("ButtonGroup_82xxl")
 icon = ExtResource("7_ubl6a")
 
 [node name="PaintRectButton" type="Button" parent="MarginContainer/MainToolbarContainer/BrushButtonsContainer"]
@@ -189,7 +171,7 @@ unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 action_mode = 0
-button_group = SubResource("ButtonGroup_w4sfi")
+button_group = SubResource("ButtonGroup_82xxl")
 icon = ExtResource("8_66io8")
 
 [node name="HBoxContainer3" type="HBoxContainer" parent="MarginContainer/MainToolbarContainer"]

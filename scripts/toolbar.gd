@@ -1,7 +1,11 @@
 @tool
 extends Window
 
+# TODO Move enum to motley.gd
 enum TileRotation { UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3 }
+var selected_rotation := TileRotation.UP
+var selected_tile := Vector2.ZERO
+
 enum BrushType { SINGLE, LINE, PIXEL, RECT }
 @onready var brush_group := ButtonGroup.new()
 
@@ -24,6 +28,9 @@ var palette_count := 8
 	%PaletteColor01, %PaletteColor02, %PaletteColor03, %PaletteColor04, 
 	%PaletteColor05, %PaletteColor06, %PaletteColor07, %PaletteColor08
 ]
+
+func load_palette(path: String) -> void:
+	pass
 
 func get_foreground_color() -> Color:
 	return ((palette[fg_selected] as Panel)
@@ -51,8 +58,6 @@ func is_foreground_alpha() -> bool:
 func is_background_alpha() -> bool:
 	return %BackAlphaButton.button_pressed
 
-var selected_tile := Vector2.ZERO
-
 func _ready() -> void:
 	unresizable = true
 	%PaintSingleButton.button_group = brush_group
@@ -79,7 +84,6 @@ func _process(delta: float) -> void:
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		if Rect2(%Tileset.global_position, %Tileset.size).has_point(%Tileset.get_global_mouse_position()):
 			var pos: Vector2 = %Tileset.get_global_mouse_position() - %Tileset.global_position
-			pos.x -= 28
 			pos = Vector2(
 				floor(pos.x / tile_size.x) * tile_size.x,
 				floor(pos.y / tile_size.y) * tile_size.y)

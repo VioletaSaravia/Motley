@@ -1,24 +1,21 @@
-[gd_scene load_steps=7 format=3 uid="uid://buax6rann82as"]
+[gd_scene load_steps=6 format=3 uid="uid://buax6rann82as"]
 
-[ext_resource type="Script" path="res://addons/motley/scripts/windowed_sprite.gd" id="1_up614"]
-[ext_resource type="Script" path="res://addons/motley/scripts/textmode_sprite.gd" id="1_x27s7"]
-[ext_resource type="Texture2D" uid="uid://r8uvc8uorbks" path="res://addons/motley/assets/save_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="2_e1yaa"]
-[ext_resource type="Texture2D" uid="uid://oncdatnie37m" path="res://addons/motley/assets/file_export_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="3_lldlv"]
+[ext_resource type="Script" path="res://addons/motley/scripts/standalone/windowed_sprite.gd" id="1_l8pdp"]
+[ext_resource type="Texture2D" uid="uid://r8uvc8uorbks" path="res://addons/motley/assets/save_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="2_4nj5d"]
+[ext_resource type="Texture2D" uid="uid://oncdatnie37m" path="res://addons/motley/assets/file_export_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24.svg" id="3_k1yji"]
+[ext_resource type="Script" path="res://addons/motley/scripts/textmode_sprite.gd" id="4_5cfr4"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yksxh"]
 bg_color = Color(0.254902, 0.254902, 0.254902, 1)
 corner_detail = 1
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_abeav"]
-viewport_path = NodePath("TextModeSprite/@SubViewport@105230")
-
 [node name="Window" type="Window"]
 gui_embed_subwindows = true
 title = "New tilemap"
 initial_position = 1
-size = Vector2i(204, 168)
+size = Vector2i(204, 264)
 unresizable = true
-script = ExtResource("1_up614")
+script = ExtResource("1_l8pdp")
 
 [node name="WindowToolbar" type="PanelContainer" parent="."]
 unique_name_in_owner = true
@@ -35,12 +32,12 @@ layout_mode = 2
 [node name="SaveButton" type="Button" parent="WindowToolbar/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-icon = ExtResource("2_e1yaa")
+icon = ExtResource("2_4nj5d")
 flat = true
 
 [node name="ExportButton" type="Button" parent="WindowToolbar/HBoxContainer"]
 layout_mode = 2
-icon = ExtResource("3_lldlv")
+icon = ExtResource("3_k1yji")
 flat = true
 
 [node name="Zoom2xButton" type="Button" parent="WindowToolbar/HBoxContainer"]
@@ -57,8 +54,5 @@ flat = true
 
 [node name="TextModeSprite" type="Sprite2D" parent="."]
 unique_name_in_owner = true
-texture_filter = 1
 position = Vector2(0, 32)
-texture = SubResource("ViewportTexture_abeav")
-script = ExtResource("1_x27s7")
-size = Vector2i(0, 0)
+script = ExtResource("4_5cfr4")

@@ -1,31 +1,9 @@
 @tool
 class_name TextModeSprite extends Sprite2D
 
-enum TileRotation { UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3 }
-enum BrushType { SINGLE, LINE, RECTANGLE, PIXEL }
-
-enum STATE { NotStarted, Editing, Baked }
-var state := STATE.NotStarted
-
-@export var size: Vector2i = Vector2i(10, 10):
-	set(val):
-		if state == STATE.NotStarted:
-			size = val
-
-@export var tileset: Texture
-@export var tile_size: Vector2i
-
-@export_category("Toolbar")
-@export var selected_tile := Vector2.ZERO:
-	get: return toolbar.selected_tile if toolbar else selected_tile
-	set(val): if val.x >= 0 && val.y >= 0: selected_tile = val
-@export var selected_rotation := TileRotation.UP
-var mouse_tile: Vector2
-
-@onready var toolbar := get_tree().get_root().get_child(0).get_node("%Toolbar")\
-	if !Engine.is_editor_hint()\
-	else null
-
+### STATE VARIABLES ###
+# TODO in editor, out of editor and standalone are three different states.
+@onready var toolbar := $/root/Main/Toolbar if !Engine.is_editor_hint() else null
 var foreground_color := Color.WHITE:
 	get: return toolbar.get_foreground_color()
 var transparent_foreground := false:
@@ -34,7 +12,7 @@ var background_color := Color.BLACK:
 	get: return toolbar.get_background_color()
 var transparent_background := false:
 	get: return toolbar.is_background_alpha()
-var brush := BrushType.SINGLE:
+var brush:
 	get: return toolbar.get_brush()
 var paint_tile := true:
 	get: return toolbar.is_paint_tile_on()
@@ -44,20 +22,26 @@ var paint_background := true:
 	get: return toolbar.is_paint_background_on()
 var paint_rotation := true:
 	get: return toolbar.is_paint_rotation_on()
+var mouse_tile: Vector2
+var selected_tile := Vector2.ZERO:
+	get: return toolbar.selected_tile if toolbar else selected_tile
+	set(val): if val.x >= 0 && val.y >= 0: selected_tile = val
+var selected_rotation := 0:
+	get: return toolbar.selected_rotation if toolbar else selected_rotation
 
-@export var bake := false:
-	set(val):
-		if state == STATE.NotStarted: return
-		state = STATE.Baked if not bake else STATE.Editing
-		
-		if bake:
-			texture = viewport.get_texture()
-		else:
-			texture = ImageTexture.create_from_image(texture.get_image())
-		
-		bake = val
+enum STATE { NotStarted, Editing, Baked }
+var state := STATE.NotStarted
+var size: Vector2i = Vector2i(10, 10):
+	set(val): if state == STATE.NotStarted: size = val
+var tileset: Texture
+var tile_size: Vector2i
 
-# Rendering data
+### RENDERING ###
+var viewport_scene := preload("res://addons/motley/scenes/tilemap_viewport.tscn")
+var viewport: SubViewport
+var sprite: Node2D
+var mouse_sprite: Node2D
+
 var tiles: Array[Array] # of Vector2
 var rotations: Array[Array] # of TileRotation
 var fore_colors: Image
@@ -65,9 +49,14 @@ var back_colors: Image
 var fore_tex: ImageTexture
 var back_tex: ImageTexture
 
-func _set_viewport_size() -> void:
-	viewport.size = Vector2(tile_size.x * size.x * scale.x, tile_size.y * size.y * scale.y)
+### MENU SCRIPTS ###
+var new_msg_scene := preload("res://addons/motley/scenes/new_textmode_sprite_msg.tscn")
+var new_msg: Label
+var new_window_scene := preload("res://addons/motley/scenes/new_tilemap_window.tscn")
+var tileset_picker := preload("res://addons/motley/scenes/tileset_picker.tscn")
+var window: Control
 
+### HELPER FUNCTIONS ###
 func zoom_in() -> void:
 	if state != STATE.Editing: return
 	
@@ -84,39 +73,63 @@ func zoom_out() -> void:
 		size.x * tile_size.x / 2 * scale.x,
 		size.y * tile_size.y / 2 * scale.y)
 
+# TODO Save dialogs
 var uid := str(ResourceUID.create_id())
 var sprite_name := ""
-
 func save_tilemap() -> void:
 	if state != STATE.Editing: return
 	
-	var saved := PackedScene.new()
-	saved.pack(sprite)
-	ResourceSaver.save(saved, "res://scenes/textmode_sprite_" + uid + ".tscn")
+	var saved := SavedCharmap.new()
+	saved.size = size
+	saved.tileset = tileset
+	saved.tile_size = tile_size
+	saved.tiles = tiles
+	saved.rotations = rotations
+	saved.fore_colors = fore_colors
+	saved.back_colors = back_colors
+	saved.fore_tex = fore_tex
+	saved.back_tex = back_tex
+	
+	ResourceSaver.save(saved, "res://resources/charmap"+str(ResourceUID.create_id())+".tres")
+	# TODO confirmation
+	
+var loaded: SavedCharmap
+func load_tilemap(path: String) -> void:
+	loaded = load(path)
+	
+	size = loaded.size
+	tileset = loaded.tileset
+	tile_size = loaded.tile_size
+	position += Vector2(size.x * tile_size.x / 2, size.y * tile_size.y / 2)
+	#scale = Vector2(2, 2) # TODO
+	
+	viewport = viewport_scene.instantiate()
+	sprite = viewport.get_node("%Sprite")
+	sprite.s = self
+	mouse_sprite = viewport.get_node("%MouseSprite")
+	mouse_sprite.s = self
+	add_child(viewport)
+	viewport.size = Vector2(tile_size.x * size.x * scale.x, tile_size.y * size.y * scale.y)
+	
+	fore_colors = loaded.fore_colors
+	back_colors = loaded.back_colors
+	fore_tex = loaded.fore_tex
+	back_tex = loaded.back_tex
+	
+	tiles = loaded.tiles
+	rotations = loaded.rotations
+	
+	texture = viewport.get_texture()
+	texture_filter = TEXTURE_FILTER_NEAREST
+	
+	state = STATE.Editing
+	if window != null: window.queue_free()
+	if new_msg != null: new_msg.queue_free()
 
 func save_png() -> void:
 	texture.get_image().save_png("res://assets/sprite.png")
 
-var viewport: SubViewport
-var sprite: Node2D
-var mouse: Node2D
-
-var NewTilemapWindow := preload("res://addons/motley/scenes/new_tilemap_window.tscn")
-var TilesetPicker := preload("res://addons/motley/scenes/tileset_picker.tscn")
-
-var window: Control
-
-func _ready() -> void:
-	if state == STATE.NotStarted:
-		window = NewTilemapWindow.instantiate()
-		add_child(window)
-		(window.get_node("%CreateButton") as Button).pressed.connect(_start_editing)
-		return
-
-var sprite_script := preload("res://addons/motley/scripts/textmode_sprite_internal.gd")
-var shader_script := preload("res://addons/motley/shaders/textmode_sprite.gdshader")
-var mouse_script := preload("res://addons/motley/scripts/mouse_sprite.gd")
-var mouse_shader := preload("res://addons/motley/shaders/mouse_sprite.gdshader")
+### INIT ###
 
 func _start_editing() -> void:
 	size = Vector2(
@@ -129,19 +142,13 @@ func _start_editing() -> void:
 	position += Vector2(size.x * tile_size.x / 2, size.y * tile_size.y / 2)
 	#scale = Vector2(2, 2) # TODO
 	
-	viewport = SubViewport.new()
-	viewport.transparent_bg = true
-	viewport.snap_2d_transforms_to_pixel = true
-	
-	sprite = sprite_script.new()
+	viewport = viewport_scene.instantiate()
+	sprite = viewport.get_node("%Sprite")
 	sprite.s = self
-	sprite.material = ShaderMaterial.new()
-	sprite.material.shader = shader_script
-	
-	mouse = mouse_script.new()
-	mouse.s = self
-	mouse.material = ShaderMaterial.new()
-	mouse.material.shader = mouse_shader
+	mouse_sprite = viewport.get_node("%MouseSprite")
+	mouse_sprite.s = self
+	add_child(viewport)
+	viewport.size = Vector2(tile_size.x * size.x * scale.x, tile_size.y * size.y * scale.y)
 	
 	fore_colors = Image.create(
 		size.x * tile_size.x, size.y * tile_size.y, 
@@ -157,25 +164,31 @@ func _start_editing() -> void:
 		rotations.append([])
 		tiles[i].resize(size.y)
 		for j in range(size.y):
-			rotations[i].append(TileRotation.UP)
-	
-	viewport.add_child(sprite)
-	viewport.add_child(mouse)
-	self.add_child(viewport)
-	
-	_set_viewport_size()
+			rotations[i].append(0)
 	
 	texture = viewport.get_texture()
 	texture_filter = TEXTURE_FILTER_NEAREST
 	
 	state = STATE.Editing
-	window.queue_free()
+	if window != null: window.queue_free()
+	if new_msg != null: new_msg.queue_free()
+
+func _ready() -> void:
+	if state != STATE.NotStarted: return
+	
+	if Engine.is_editor_hint():
+		new_msg = new_msg_scene.instantiate()
+		add_child(new_msg)
+	else:
+		window = new_window_scene.instantiate()
+		add_child(window)
+		(window.get_node("%CreateButton") as Button).pressed.connect(_start_editing)
+
+### UPDATE ###
 
 func _place_tile() -> void:
-	if paint_tile: 
-		tiles[mouse_tile.x][mouse_tile.y] = selected_tile
-	if paint_rotation: 
-		rotations[mouse_tile.x][mouse_tile.y] = selected_rotation
+	if paint_tile: tiles[mouse_tile.x][mouse_tile.y] = selected_tile
+	if paint_rotation: rotations[mouse_tile.x][mouse_tile.y] = selected_rotation
 	
 	if not paint_foreground and not paint_background: return
 	
@@ -207,10 +220,10 @@ func _set_mouse_tile() -> void:
 		Vector2(tile_size.x * size.x, tile_size.y * size.y) / 2 # Why?
 	mouse_tile.x = floor(mouse_tile.x / tile_size.x)
 	mouse_tile.y = floor(mouse_tile.y / tile_size.y)
-
+	
 func _update_editor() -> void:
 	sprite.queue_redraw()
-	mouse.queue_redraw()
+	mouse_sprite.queue_redraw()
 	
 	_set_mouse_tile()
 	
@@ -218,5 +231,5 @@ func _update_editor() -> void:
 		Rect2(0, 0, size.x, size.y).has_point(mouse_tile):
 			_place_tile()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if state == STATE.Editing: _update_editor()

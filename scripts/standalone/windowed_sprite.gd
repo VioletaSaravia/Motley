@@ -9,7 +9,7 @@ func close_window() -> void:
 func _ready() -> void:
 	unresizable = true
 	close_requested.connect(close_window)
-	size = sprite.window.size
+	if sprite.window: size = sprite.window.size
 	size.y += %WindowToolbar.size.y
 	title = "New tilemap"
 	
@@ -30,6 +30,7 @@ func _process(delta: float) -> void:
 				sprite_size_x if sprite_size_x > 100 else 100, 
 				sprite.viewport.size.y * sprite.scale.y) + Vector2(0, %WindowToolbar.size.y)
 		TextModeSprite.STATE.NotStarted:
+			if not sprite.window: return
 			if sprite.window.tileset_picker == null or !is_instance_valid(sprite.window.tileset_picker):
 				size = sprite.window.size + Vector2(0, %WindowToolbar.size.y)
 			else:

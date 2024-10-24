@@ -6,7 +6,7 @@ func _draw() -> void:
 	var size := toolbar.tile_size as Vector2i
 	draw_rect(
 		Rect2(
-			28 + size.x * toolbar.selected_tile.x, 
+			size.x * toolbar.selected_tile.x, 
 			size.y * toolbar.selected_tile.y, size.x, size.y), 
 		Color.RED, false)
 

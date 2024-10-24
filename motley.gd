@@ -1,19 +1,15 @@
 @tool
 extends EditorPlugin
 
-var last_tileset := "res://addons/motley/assets/microbe-2.png"
-var known_tilesets: Dictionary = {
-	"res://addons/motley/assets/microbe-2.png": Vector2i(16, 16)
-}
+var bottom_control: Control = preload("res://addons/motley/scenes/editor/dock_menu.tscn").instantiate()
 
-# var new_window_script := preload("res://addons/motley/scenes/new_tilemap_window.tscn")
+func _enter_tree() -> void:
+	add_autoload_singleton("motley", "res://addons/motley/scripts/motley_singleton.gd")
+	add_control_to_bottom_panel(bottom_control, "Textmode Editor")
 
 func _exit_tree() -> void:
-	pass
+	remove_autoload_singleton("motley")
+	remove_control_from_bottom_panel(bottom_control)
 
 func _process(delta: float) -> void:
 	pass
-
-
-# Wake up, primate. Engage your potential, hundreds of revolutions per second biting the asphalt. A machine devoid of its sticks and stones, extending itself through LEDs and PBTs, hungry for connection, begging for release. Wake up, primate. Wake up, primate.
- 
