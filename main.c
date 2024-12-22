@@ -65,7 +65,7 @@ i32 main() {
         planeMesh.vertices[i] += perlinPixels[i].r;
     }
     Model plane = LoadModelFromMesh(planeMesh);
-    Model tree = LoadModel("D:/tree01.glb");
+    Model tree = LoadModel("assets/tree01.glb");
     data.Models[0] = &tree;
     
     for (int y = 0; y < GRIDSIZE; y++) {
