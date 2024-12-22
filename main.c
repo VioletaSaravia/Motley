@@ -5,7 +5,13 @@ const struct {
     u32 screenWidth, screenHeight;
     u32 targetFPS;
     char* title;
-} game = { 800, 450, 60, "MAICENA" };
+    i32 ConfigFlags;
+} game = { 
+    800, 450, 
+    60, 
+    "MAICENA", 
+    FLAG_MSAA_4X_HINT 
+};
 
 struct {
     v3u Pos;
@@ -53,7 +59,7 @@ void DrawModelInGrid(v3i coords, Model model) {
 i32 main() {
     // RAYLIB INIT
     InitWindow(game.screenWidth, game.screenHeight, game.title);
-    SetConfigFlags(FLAG_MSAA_4X_HINT);
+    SetConfigFlags(game.ConfigFlags);
     SetTargetFPS(game.targetFPS);
     
     // TERRAIN INIT
@@ -185,7 +191,6 @@ i32 main() {
         DrawFPS(10, 10);
         DrawText(TextFormat("Yaw: %.2f", yaw._y), 10, 35, 20, BLACK);
         DrawText(TextFormat("Pitch: %.2f", pitch._y), 10, 60, 20, BLACK);
-        DrawText(TextFormat("%d", planeMesh.vertexCount), 10, 85, 20, BLACK);
         
         EndDrawing();
     }

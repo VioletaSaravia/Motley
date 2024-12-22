@@ -1,5 +1,7 @@
-# Game
-# assets/
+# Web output
+*.html
+*.js
+*.wasm
 
 # Prerequisites
 *.d
