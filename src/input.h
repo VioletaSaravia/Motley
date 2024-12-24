@@ -11,52 +11,43 @@ typedef enum {
     ACTION_CANCEL
 } Action;
 
-typedef struct Keybind Keybind;
-struct Keybind {
-    int Key;
-    Keybind* Next;
-};
+#define MAX_KEYBINDS 3
 
-const Keybind Keybinds[6] = {
-    {KEY_A, &(Keybind){KEY_G, NULL}},
-    {KEY_D, NULL},
-    {KEY_W, NULL},
-    {KEY_S, NULL},
-    {KEY_K, NULL},
-    {KEY_J, NULL},
+const int Keybinds[6][MAX_KEYBINDS] = {
+    {KEY_A, KEY_G},
+    {KEY_D},
+    {KEY_W},
+    {KEY_S},
+    {KEY_K},
+    {KEY_J},
 };
 
 bool IsActionPressed(Action action){
-    for (Keybind const* next = &Keybinds[action]; next != NULL; next = next->Next) {
-        if (IsKeyPressed(next->Key)) return true;
-    }
+    for (int i = 0; i < MAX_KEYBINDS; i++)
+        if (IsKeyPressed(Keybinds[action][i])) return true;
     return false;
 }
 
 bool IsActionPressedRepeat(Action action){
-    for (Keybind const* next = &Keybinds[action]; next != NULL; next = next->Next) {
-        if (IsKeyPressedRepeat(next->Key)) return true;
-    }
+    for (int i = 0; i < MAX_KEYBINDS; i++)
+        if (IsKeyPressedRepeat(Keybinds[action][i])) return true;
     return false;
 }
 
 bool IsActionReleased(Action action){
-    for (Keybind const* next = &Keybinds[action]; next != NULL; next = next->Next) {
-        if (IsKeyReleased(next->Key)) return true;
-    }
+    for (int i = 0; i < MAX_KEYBINDS; i++)
+        if (IsKeyReleased(Keybinds[action][i])) return true;
     return false;
 }
 
 bool IsActionUp(Action action){
-    for (Keybind const* next = &Keybinds[action]; next != NULL; next = next->Next) {
-        if (IsKeyUp(next->Key)) return true;
-    }
+    for (int i = 0; i < MAX_KEYBINDS; i++)
+        if (IsKeyUp(Keybinds[action][i])) return true;
     return false;
 }
 
 bool IsActionDown(Action action){
-    for (Keybind const* next = &Keybinds[action]; next != NULL; next = next->Next) {
-        if (IsKeyDown(next->Key)) return true;
-    }
+    for (int i = 0; i < MAX_KEYBINDS; i++)
+        if (IsKeyDown(Keybinds[action][i])) return true;
     return false;
 }

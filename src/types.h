@@ -44,8 +44,20 @@ typedef struct {
     f32 _k1, _k2, _k3; 
 } DampedF32;
 
-DampedF32 DampedF32Init(){
-    return (DampedF32){
+void DampedF32Start(DampedF32 *this, f32 x0){
+    this->_y = x0;
+    this->_yd = 0.0f;
+    this->_xp = x0;
+    
+    this->_k1 = this->damp / (PI * this->freq);
+    this->_k2 = 1 / ((2 * PI * this->freq) * (2 * PI * this->freq));
+    this->_k3 = this->resp * this->damp / (2 * PI * this->freq);
+    
+    this->started = true;
+}
+
+DampedF32 DampedF32Init(f32 x0){
+    DampedF32 result = (DampedF32){
         .started = false,
         .enabled = true, 
         .freq = 0.25f, 
@@ -58,18 +70,10 @@ DampedF32 DampedF32Init(){
         ._k2 = 0.0f, 
         ._k3 = 0.0f
     };
-}
 
-void DampedF32Start(DampedF32 *this, f32 x0){
-    this->_y = x0;
-    this->_yd = 0.0f;
-    this->_xp = x0;
-    
-    this->_k1 = this->damp / (PI * this->freq);
-    this->_k2 = 1 / ((2 * PI * this->freq) * (2 * PI * this->freq));
-    this->_k3 = this->resp * this->damp / (2 * PI * this->freq);
-    
-    this->started = true;
+    DampedF32Start(&result, x0);
+
+    return result;
 }
 
 void DampedF32Update(DampedF32 *this, f32 x){
