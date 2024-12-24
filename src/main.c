@@ -1,28 +1,32 @@
 #include "types.h"
 #include "input.h"
 
+// GAME SETUP
 const struct {
     u32 screenWidth, screenHeight;
     u32 targetFPS;
     char* title;
     i32 ConfigFlags;
-} game = { 
-    800, 450, 
-    60, 
-    "MAICENA", 
-    FLAG_MSAA_4X_HINT 
+    bool DELETEME;
+} game = {
+    800, 450,
+    60,
+    "MAICENA",
+    FLAG_MSAA_4X_HINT
 };
 
+// PLAYER DATA
 struct {
     v3u Pos;
-} player = {};
+} player;
 
 Action REL_LEFT = ACTION_LEFT;
 Action REL_RIGHT = ACTION_RIGHT;
 Action REL_DOWN = ACTION_DOWN;
 Action REL_UP = ACTION_UP;
 
-#define GRIDSIZE 17
+// MAP DATA
+#define GRIDSIZE 14
 #define UNITSIZE 1.212f
 #define UNITHEIGHT (0.2394f * UNITSIZE)
 #define UNITCOUNT 1
@@ -30,20 +34,20 @@ Action REL_UP = ACTION_UP;
 struct {
     u32 Objs[GRIDSIZE][GRIDSIZE];
     u32 Height[GRIDSIZE][GRIDSIZE];
-} grid = {};
+} grid;
 
 struct {
     Model *Models[UNITCOUNT];
-} data = {};
+} data;
 
-void DrawCubeInGrid(v3i coords, Color color){
+void DrawCubeInGrid(v3i coords, v3 size, Color color){
     DrawCubeV(
         (v3){
             coords.x * UNITSIZE,
             coords.y * UNITHEIGHT,
             coords.z * UNITSIZE
         },
-        (v3){UNITSIZE, UNITSIZE, UNITSIZE},
+        size,
         color
     );
 }
@@ -63,22 +67,19 @@ i32 main() {
     SetTargetFPS(game.targetFPS);
     
     // TERRAIN INIT
-    Image perlin = GenImagePerlinNoise(GRIDSIZE * 4, GRIDSIZE * 4, 0, 0, 1.0f);
+    Image perlin = GenImagePerlinNoise(GRIDSIZE, GRIDSIZE, 0, 0, 1.0f);
     Color* perlinPixels = LoadImageColors(perlin);
     
-    Mesh planeMesh = GenMeshPlane(GRIDSIZE * UNITSIZE, GRIDSIZE * UNITSIZE, GRIDSIZE, GRIDSIZE);
-    for (int i = 0; i < planeMesh.vertexCount; i++) {
-        planeMesh.vertices[i] += perlinPixels[i].r;
-    }
-    Model plane = LoadModelFromMesh(planeMesh);
-    Model tree = LoadModel("assets/tree01.glb");
-    data.Models[0] = &tree;
-    
-    for (int y = 0; y < GRIDSIZE; y++) {
-        for (int x = 0; x < GRIDSIZE; x++) {
+    for (int x = 0; x < GRIDSIZE; x++) {
+        for (int y = 0; y < GRIDSIZE; y++) {
+            grid.Objs[x][y] = GetRandomValue(0, 100) < 98 ? 0 : 1;
             grid.Height[x][y] = perlinPixels[y * GRIDSIZE + x].r % 5;
         }
     }
+
+    // MODELS INIT
+    Model tree = LoadModel("assets/tree01.glb");
+    data.Models[0] = &tree;
 
     // CAMERA INIT
     v3 cameraOrbit = (v3){GRIDSIZE * 0.5f * UNITSIZE, 0, GRIDSIZE * 0.5f * UNITSIZE};
@@ -166,31 +167,41 @@ i32 main() {
                         grid.Height[player.Pos.x][player.Pos.z], 
                         player.Pos.z
                     }, 
-                    BLACK
+                    (v3){UNITSIZE, UNITSIZE, UNITSIZE},
+                    GREEN
                 );
                 
                 // Draw terrain
-                DrawModel(plane, 
-                    Vector3Add(cameraOrbit, (v3){- UNITSIZE / 2, 0, - UNITSIZE / 2}), 
-                    1.0f,
-                    WHITE
-                );
+                for (i32 i = 0; i < GRIDSIZE; i++){
+                    for (i32 j = 0; j < GRIDSIZE; j++) {
+                        DrawCubeInGrid(
+                            (v3i){i, 0.0f, j},
+                            (v3){UNITSIZE, (grid.Height[i][j] + 1) * UNITHEIGHT, UNITSIZE},
+                            BLACK
+                        );
+                    }
+                }
+                
                 
                 // Draw objects
                 for (i32 i = 0; i < GRIDSIZE; i++){
                     for (i32 j = 0; j < GRIDSIZE; j++) {
-                        u32 id = grid.Objs[i][j];
-                        if (id != 0) 
-                            DrawModelInGrid((v3i){i, grid.Height[i][j], j}, *data.Models[0]);
+                        if (grid.Objs[i][j] != 0) {
+                            DrawCubeInGrid(
+                                (v3i){i, grid.Height[i][j], j}, 
+                                (v3){UNITSIZE, UNITSIZE, UNITSIZE}, 
+                                RED);//, *(data.Models[0]));
+                        }
                     }
                 }
 
             EndMode3D();
 
-        // GUI 
+        // GUI
         DrawFPS(10, 10);
         DrawText(TextFormat("Yaw: %.2f", yaw._y), 10, 35, 20, BLACK);
         DrawText(TextFormat("Pitch: %.2f", pitch._y), 10, 60, 20, BLACK);
+        DrawText(TextFormat("Player: %d, %d", player.Pos.x, player.Pos.z), 10, 85, 20, BLACK);
         
         EndDrawing();
     }
