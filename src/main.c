@@ -20,8 +20,8 @@ Action REL_DOWN  = ACTION_DOWN;
 Action REL_UP    = ACTION_UP;
 
 // MAP DATA
-#define GRIDSIZE 5
-#define UNITSIZE 1.212f
+#define GRIDSIZE 10
+#define UNITSIZE 1.352f
 #define UNITHEIGHT (0.2394f * UNITSIZE)
 #define UNITCOUNT 1
 
@@ -65,48 +65,45 @@ i32 main() {
     data.Models[0] = &tree;
 
     // CAMERA INIT
-    v3     cameraOrbit = (v3){GRIDSIZE * 0.5f * UNITSIZE, 0, GRIDSIZE * 0.5f * UNITSIZE};
+    v3     cameraOrbit = (v3){GRIDSIZE * 0.5f * UNITSIZE - 0.5f * UNITSIZE, 0,
+                              GRIDSIZE * 0.5f * UNITSIZE - 0.5f * UNITSIZE};
     Camera camera      = {{0}, cameraOrbit, {0.0f, 1.0f, 0.0f}, 45.0f, CAMERA_PERSPECTIVE};
 
-    f32       radius = 1.5f * GRIDSIZE;
-    DampedF32 yaw    = DampedF32Init(-0.25f * PI);
-    DampedF32 pitch  = DampedF32Init(-10.0f);
+    f32  radius = 1.5f * GRIDSIZE;
+    f32d yaw    = f32dInit(-0.25f * PI);
+    f32d pitch  = f32dInit(-10.0f);
 
     while (!WindowShouldClose()) {
         // CAMERA UPDATE
-        DampedF32Update(&yaw, IsKeyDown(KEY_Q)   ? yaw._y - 2.0f
-                              : IsKeyDown(KEY_E) ? yaw._y + 2.0f
-                                                 : yaw._y);
-        DampedF32Update(&pitch, IsKeyDown(KEY_F)   ? pitch._y - 1.0f
-                                : IsKeyDown(KEY_R) ? pitch._y + 1.0f
-                                                   : pitch._y);
+        f32dUpdate(&yaw, IsActionDown(ACTION_CAM_ROT_LEFT)    ? yaw._y - 2.0f
+                         : IsActionDown(ACTION_CAM_ROT_RIGHT) ? yaw._y + 2.0f
+                                                              : yaw._y);
+        f32dUpdate(&pitch, IsActionDown(ACTION_CAM_ROT_UP)     ? pitch._y - 1.0f
+                           : IsActionDown(ACTION_CAM_ROT_DOWN) ? pitch._y + 1.0f
+                                                               : pitch._y);
 
         camera.position = Vector3Add(CalculateOrbit(radius, yaw._y, pitch._y), cameraOrbit);
 
         // CONTROLS UPDATE
         f32 angle = (camera.position.x > 0.0f ? 1.0f : -1.0f) *
                     Vector3Angle((v3){camera.position.x, 0, camera.position.z}, (v3){0, 0, 1});
-
-        static f32 bar[4] = {-0.25f * PI, 0.25f * PI, 0.75f * PI, -0.75f * PI};
-        if (angle > bar[0] && angle <= bar[1]) {
+        static f32 viewAngles[4] = {-0.25f * PI, 0.25f * PI, 0.75f * PI, -0.75f * PI};
+        if (angle > viewAngles[0] && angle <= viewAngles[1]) {
             REL_LEFT  = ACTION_LEFT;
             REL_RIGHT = ACTION_RIGHT;
             REL_DOWN  = ACTION_DOWN;
             REL_UP    = ACTION_UP;
-        }
-        if (angle > bar[1] && angle <= bar[2]) {
+        } else if (angle > viewAngles[1] && angle <= viewAngles[2]) {
             REL_LEFT  = ACTION_UP;
             REL_RIGHT = ACTION_DOWN;
             REL_DOWN  = ACTION_LEFT;
             REL_UP    = ACTION_RIGHT;
-        }
-        if (angle > bar[2] || angle <= bar[3]) {
+        } else if (angle > viewAngles[2] || angle <= viewAngles[3]) {
             REL_LEFT  = ACTION_RIGHT;
             REL_RIGHT = ACTION_LEFT;
             REL_DOWN  = ACTION_UP;
             REL_UP    = ACTION_DOWN;
-        }
-        if (angle > bar[3] && angle < bar[0]) {
+        } else if (angle > viewAngles[3] && angle < viewAngles[0]) {
             REL_LEFT  = ACTION_DOWN;
             REL_RIGHT = ACTION_UP;
             REL_DOWN  = ACTION_RIGHT;
