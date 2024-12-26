@@ -1,2 +1,2 @@
 #define INPUT_EXPORTS
-#include "input.h"
+#include "game.h"
