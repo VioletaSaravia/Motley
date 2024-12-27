@@ -1,3 +1,6 @@
+# Non-distributable
+mrmox3.png
+
 # Build files
 build/
 
@@ -31,7 +34,6 @@ build/
 *.app
 *.i*86
 *.x86_64
-*.hex
 
 # Debug files
 *.dSYM/

@@ -16,6 +16,27 @@
 
 #include "types.h"
 
+// ===== SETUP =====
+
+typedef struct {
+    u32   screenWidth, screenHeight;
+    u32   targetFPS;
+    char* title;
+    i32   ConfigFlags;
+    Image Icon;
+} WindowOptions;
+
+void InitGameWindow(WindowOptions* opts) {
+    SetConfigFlags(opts->ConfigFlags);
+
+    InitWindow(opts->screenWidth, opts->screenHeight, opts->title);
+
+    opts->Icon = LoadImage("");
+    SetWindowIcon(opts->Icon);
+}
+
+void SetGameWindow(WindowOptions* opts) { SetTargetFPS(opts->targetFPS); }
+
 // ====== KEYBINDS =====
 
 typedef enum {
@@ -158,29 +179,6 @@ GAME_API bool IsActionDown(Action action) {
     return false;
 }
 
-// ===== SETUP =====
-
-typedef struct {
-    u32   screenWidth, screenHeight;
-    u32   targetFPS;
-    char* title;
-    i32   ConfigFlags;
-    Image Icon;
-} WindowOptions;
-
-static WindowOptions window = {800, 450, 0, "MAICENA", FLAG_MSAA_4X_HINT};
-
-void InitGameWindow(WindowOptions* opts) {
-    SetConfigFlags(opts->ConfigFlags);
-
-    InitWindow(opts->screenWidth, opts->screenHeight, opts->title);
-
-    opts->Icon = LoadImage("");
-    SetWindowIcon(opts->Icon);
-}
-
-void SetGameWindow(WindowOptions* opts) { SetTargetFPS(opts->targetFPS); }
-
 // ===== CAMERAS =====
 
 typedef struct {
@@ -198,7 +196,29 @@ GAME_API OrbitCamera2D NewOrbitCamera2D() {
                            .Angle  = f32dInit(0.0f)};
 }
 
-// ===== HELPERS =====
+GAME_API void SimpleCameraControls(Camera2D* cam, WindowOptions window) {
+    f32 delta = GetFrameTime();
+
+    cam->target.x += (IsActionDown(ACTION_CAM_LEFT)    ? -500.0f
+                      : IsActionDown(ACTION_CAM_RIGHT) ? 500.0f
+                                                       : 0.0f) *
+                     delta;
+    cam->target.y += (IsActionDown(ACTION_CAM_UP)     ? -500.0f
+                      : IsActionDown(ACTION_CAM_DOWN) ? 500.0f
+                                                      : 0.0f) *
+                     delta;
+
+    if (IsActionDown(ACTION_CAM_ZOOM_RESET))
+        cam->zoom = 1.0f;
+    else
+        cam->zoom *= IsActionPressed(ACTION_CAM_ZOOM_IN)    ? 2.0f
+                     : IsActionPressed(ACTION_CAM_ZOOM_OUT) ? 0.5f
+                                                            : 1.0f;
+
+    cam->offset = (v2){window.screenWidth / 2, window.screenHeight / 2};
+}
+
+// ===== OS =====
 
 void Execute(const char* cmd) {
     FILE* fp = popen(cmd, "r");
@@ -208,4 +228,10 @@ void Execute(const char* cmd) {
         path[strcspn(path, "\n")] = '\0';
         printf(path);
     }
+}
+
+void WindowControls(WindowOptions* window) {
+    if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_R)) SetGameWindow(window);
+    if (IsKeyPressed(KEY_F11) || (IsKeyDown(KEY_LEFT_ALT) && IsKeyPressed(KEY_ENTER)))
+        ToggleFullscreen();
 }

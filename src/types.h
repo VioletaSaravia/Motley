@@ -20,6 +20,8 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#define MALLOC_T(t, n) ((t*)malloc(sizeof(t) * n))
+
 typedef int64_t i64;
 typedef int32_t i32;
 typedef int16_t i16;
@@ -129,4 +131,37 @@ TYPES_API v3 CalculateOrbit3D(f32 radius, f32 yaw, f32 pitch) {
     v3 pitchAxis = Vector3CrossProduct(ray, (v3){0, 1, 0});
     ray          = Vector3RotateByQuaternion(ray, QuaternionFromAxisAngle(pitchAxis, TAU - pitch));
     return Vector3Scale(ray, -radius);
+}
+
+// ===== STRINGS =====
+
+bool EndsWith(const char* str, const char* suffix) {
+    u64 len        = strlen(str);
+    u64 suffix_len = strlen(suffix);
+
+    if (len < suffix_len) {
+        return false;
+    }
+
+    return strcmp(str + len - suffix_len, suffix) == 0;
+}
+
+int CountLines(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Error opening file");
+        return -1;
+    }
+
+    int  line_count = 0;
+    char ch;
+
+    while ((ch = fgetc(file)) != EOF) {
+        if (ch == '\n') {
+            line_count++;
+        }
+    }
+
+    fclose(file);
+    return line_count;
 }

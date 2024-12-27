@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "gui_keybind_menu.h": "c",
+        "game.h": "c",
+        "string.h": "c",
+        "raygui.h": "c",
+        "gui_new_tilemap.h": "c",
+        "raylib.h": "c",
+        "tilemap.h": "c",
+        "types.h": "c",
+        "regex": "c"
+    }
+}
