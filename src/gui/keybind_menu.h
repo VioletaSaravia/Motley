@@ -2,9 +2,12 @@
 
 #include <string.h>  // Required for: strcpy()
 
-#include "game.h"
+#ifndef RAYGUI_IMPLEMENTATION
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#endif
+
+#include "game.h"
 #include "raylib.h"
 
 typedef struct {
@@ -67,7 +70,7 @@ void KeybindMenu(KeybindMenuState *state) {
 void RebindMenu(KeybindMenuState *state) {
     for (u32 i = 0; i < ACTION_COUNT * MAX_KEYBINDS; i++) {
         if (state->RebindButtons[i]) {
-            Keys[(u32)floorf(i / 4)][i % 4] = (Keybind){KeyTypeKeyboard, 0};
+            Keys[(u32)floorf(i / 4)][i % 4] = (Keybind){INPUT_TYPE_Keyboard, 0};
         }
     }
 }

@@ -8,6 +8,11 @@
         "raylib.h": "c",
         "tilemap.h": "c",
         "types.h": "c",
-        "regex": "c"
+        "regex": "c",
+        "*.inc": "cpp",
+        "toolbar.h": "c",
+        "stdlib.h": "c",
+        "__tree": "c",
+        "map": "c"
     }
 }

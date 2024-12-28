@@ -135,7 +135,7 @@ TYPES_API v3 CalculateOrbit3D(f32 radius, f32 yaw, f32 pitch) {
 
 // ===== STRINGS =====
 
-bool EndsWith(const char* str, const char* suffix) {
+TYPES_API bool EndsWith(const char* str, const char* suffix) {
     u64 len        = strlen(str);
     u64 suffix_len = strlen(suffix);
 
@@ -146,14 +146,14 @@ bool EndsWith(const char* str, const char* suffix) {
     return strcmp(str + len - suffix_len, suffix) == 0;
 }
 
-int CountLines(const char* filename) {
+TYPES_API i32 CountLines(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file");
         return -1;
     }
 
-    int  line_count = 0;
+    i32  line_count = 0;
     char ch;
 
     while ((ch = fgetc(file)) != EOF) {
@@ -164,4 +164,26 @@ int CountLines(const char* filename) {
 
     fclose(file);
     return line_count;
+}
+
+// ===== COLLISION =====
+
+TYPES_API bool IsPointInRectangle(v2 p, Rectangle r) {
+    return (p.x >= r.x && p.x <= r.x + r.width && p.y >= r.y && p.y <= r.y + r.height);
+}
+
+TYPES_API bool IsRectangleInRectangle(Rectangle r1, Rectangle r2) {
+    return !(r1.x + r1.width <= r2.x ||   // r1 is to the left of r2
+             r2.x + r2.width <= r1.x ||   // r2 is to the left of r1
+             r1.y + r1.height <= r2.y ||  // r1 is above r2
+             r2.y + r2.height <= r1.y);   // r2 is above r1
+}
+
+TYPES_API Rectangle GetRectangleOverlap(Rectangle r1, Rectangle r2) {
+    float x      = fmaxf(r1.x, r2.x);
+    float y      = fmaxf(r1.y, r2.y);
+    float width  = fminf(r1.x + r1.width, r2.x + r2.width);
+    float height = fminf(r1.y + r1.height, r2.y + r2.height);
+
+    return (x >= width || y >= height) ? (Rectangle){} : (Rectangle){x, y, width - x, height - y};
 }

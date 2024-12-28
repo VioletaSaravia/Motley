@@ -40,6 +40,7 @@ void SetGameWindow(WindowOptions* opts) { SetTargetFPS(opts->targetFPS); }
 // ====== KEYBINDS =====
 
 typedef enum {
+    // Basic keys
     ACTION_LEFT,
     ACTION_RIGHT,
     ACTION_UP,
@@ -47,6 +48,19 @@ typedef enum {
     ACTION_ACCEPT,
     ACTION_CANCEL,
     ACTION_MENU,
+    ACTION_SELECT,
+
+    // Tile painting keys
+    ACTION_PAINT_TILE,
+    ACTION_PAINT_FG,
+    ACTION_PAINT_BG,
+    ACTION_PAINT_ROT,
+    ACTION_CURSOR_NEXT_FG_COLOR,
+    ACTION_CURSOR_NEXT_BG_COLOR,
+    ACTION_CURSOR_SWAP_COLORS,
+    ACTION_CURSOR_ROTATE,
+
+    // Camera keys
     ACTION_CAM_LEFT,
     ACTION_CAM_RIGHT,
     ACTION_CAM_UP,
@@ -54,49 +68,52 @@ typedef enum {
     ACTION_CAM_ZOOM_IN,
     ACTION_CAM_ZOOM_OUT,
     ACTION_CAM_ZOOM_RESET,
+
     ACTION_COUNT
 } Action;
 
 typedef enum {
-    KeyTypeKeyboard,
-    KeyTypeMouse,
-    KeyTypeGamepad1,
-    KeyTypeGamepad2,
-    KeyTypeGamepad3,
-    KeyTypeGamepad4  // etc.
-} KeyType;
+    INPUT_TYPE_Keyboard,
+    INPUT_TYPE_Mouse,
+    INPUT_TYPE_Gamepad1,
+    INPUT_TYPE_Gamepad2,
+    INPUT_TYPE_Gamepad3,
+    INPUT_TYPE_Gamepad4  // etc.
+} InputType;
 
 typedef struct {
-    KeyType Type;
-    i32     Key;
+    InputType Type;
+    // TODO Modifiers
+    i32 Key;
 } Keybind;
 
 #define MAX_KEYBINDS 3
 
-static Keybind Keys[ACTION_COUNT][MAX_KEYBINDS] = {
-    {{0, KEY_A}, {0, KEY_LEFT}, {2, GAMEPAD_BUTTON_LEFT_FACE_LEFT}},
-    {{0, KEY_D}, {0, KEY_RIGHT}, {2, GAMEPAD_BUTTON_LEFT_FACE_RIGHT}},
-    {{0, KEY_W}, {0, KEY_UP}, {2, GAMEPAD_BUTTON_LEFT_FACE_UP}},
-    {{0, KEY_S}, {0, KEY_DOWN}, {2, GAMEPAD_BUTTON_LEFT_FACE_DOWN}},
-    {{0, KEY_C}, {1, MOUSE_BUTTON_LEFT}, {2, GAMEPAD_BUTTON_RIGHT_FACE_DOWN}},
-    {{0, KEY_V}, {1, MOUSE_BUTTON_RIGHT}, {2, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT}},
-    {{0, KEY_ENTER}, {0, KEY_MENU}, {2, GAMEPAD_BUTTON_MIDDLE_RIGHT}},
-    {{0, KEY_J}, {2, GAMEPAD_BUTTON_UNKNOWN}},
-    {{0, KEY_L}, {2, GAMEPAD_BUTTON_UNKNOWN}},
-    {{0, KEY_I}, {2, GAMEPAD_BUTTON_UNKNOWN}},
-    {{0, KEY_K}, {2, GAMEPAD_BUTTON_UNKNOWN}},
-    {{0, KEY_M}, {2, GAMEPAD_BUTTON_RIGHT_TRIGGER_1}},
-    {{0, KEY_N}, {2, GAMEPAD_BUTTON_LEFT_TRIGGER_1}},
-    {{0, KEY_B}, {2, GAMEPAD_BUTTON_RIGHT_THUMB}}};
+static Keybind Keys[ACTION_COUNT][MAX_KEYBINDS] = {{{0, KEY_A}, {0, KEY_LEFT}},
+                                                   {{0, KEY_D}, {0, KEY_RIGHT}},
+                                                   {{0, KEY_W}, {0, KEY_UP}},
+                                                   {{0, KEY_S}, {0, KEY_DOWN}},
+                                                   {{0, KEY_C}, {1, MOUSE_BUTTON_LEFT}},
+                                                   {{0, KEY_V}, {1, MOUSE_BUTTON_RIGHT}},
+                                                   {{0, KEY_ENTER}, {0, KEY_MENU}},
+                                                   {{2, GAMEPAD_BUTTON_MIDDLE_LEFT}},
+                                                   {{0, KEY_ONE}},
+                                                   {{0, KEY_TWO}},
+                                                   {{0, KEY_THREE}},
+                                                   {{0, KEY_FOUR}},
+                                                   {{0, KEY_F}},
+                                                   {{0, KEY_B}},
+                                                   {{0, KEY_G}},
+                                                   {{0, KEY_R}}};
 
 GAME_API bool IsActionPressed(Action action) {
     for (int i = 0; i < MAX_KEYBINDS; i++) {
         Keybind key = Keys[action][i];
         switch (key.Type) {
-            case KeyTypeKeyboard:
+            case INPUT_TYPE_Keyboard:
                 if (IsKeyPressed(key.Key)) return true;
                 break;
-            case KeyTypeMouse:
+            case INPUT_TYPE_Mouse:
                 if (IsMouseButtonPressed(key.Key)) return true;
                 break;
             default:
@@ -111,10 +128,10 @@ GAME_API bool IsActionPressedRepeat(Action action) {
     for (int i = 0; i < MAX_KEYBINDS; i++) {
         Keybind key = Keys[action][i];
         switch (key.Type) {
-            case KeyTypeKeyboard:
+            case INPUT_TYPE_Keyboard:
                 if (IsKeyPressedRepeat(key.Key)) return true;
                 break;
-            case KeyTypeMouse:
+            case INPUT_TYPE_Mouse:
                 if (IsMouseButtonPressed(key.Key)) return true;  // Huh?
                 break;
             default:
@@ -129,10 +146,10 @@ GAME_API bool IsActionReleased(Action action) {
     for (int i = 0; i < MAX_KEYBINDS; i++) {
         Keybind key = Keys[action][i];
         switch (key.Type) {
-            case KeyTypeKeyboard:
+            case INPUT_TYPE_Keyboard:
                 if (IsKeyReleased(key.Key)) return true;
                 break;
-            case KeyTypeMouse:
+            case INPUT_TYPE_Mouse:
                 if (IsMouseButtonReleased(key.Key)) return true;
                 break;
             default:
@@ -147,10 +164,10 @@ GAME_API bool IsActionUp(Action action) {
     for (int i = 0; i < MAX_KEYBINDS; i++) {
         Keybind key = Keys[action][i];
         switch (key.Type) {
-            case KeyTypeKeyboard:
+            case INPUT_TYPE_Keyboard:
                 if (IsKeyUp(key.Key)) return true;
                 break;
-            case KeyTypeMouse:
+            case INPUT_TYPE_Mouse:
                 if (IsMouseButtonUp(key.Key)) return true;
                 break;
             default:
@@ -165,10 +182,10 @@ GAME_API bool IsActionDown(Action action) {
     for (int i = 0; i < MAX_KEYBINDS; i++) {
         Keybind key = Keys[action][i];
         switch (key.Type) {
-            case KeyTypeKeyboard:
+            case INPUT_TYPE_Keyboard:
                 if (IsKeyDown(key.Key)) return true;
                 break;
-            case KeyTypeMouse:
+            case INPUT_TYPE_Mouse:
                 if (IsMouseButtonDown(key.Key)) return true;
                 break;
             default:
@@ -230,7 +247,7 @@ void Execute(const char* cmd) {
     }
 }
 
-void WindowControls(WindowOptions* window) {
+void GameWindowControls(WindowOptions* window) {
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_R)) SetGameWindow(window);
     if (IsKeyPressed(KEY_F11) || (IsKeyDown(KEY_LEFT_ALT) && IsKeyPressed(KEY_ENTER)))
         ToggleFullscreen();
