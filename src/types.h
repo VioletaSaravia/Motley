@@ -22,6 +22,12 @@
 
 #define MALLOC_T(t, n) ((t*)malloc(sizeof(t) * n))
 
+#ifdef __cplusplus
+#define TYPE(name) name
+#else
+#define TYPE(name) (name)
+#endif
+
 typedef int64_t i64;
 typedef int32_t i32;
 typedef int16_t i16;
@@ -32,8 +38,8 @@ typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t  u8;
 
-typedef double f64;
-typedef float  f32;
+typedef double_t f64;
+typedef float_t  f32;
 
 typedef Vector3 v3;
 typedef Vector2 v2;
@@ -41,6 +47,7 @@ typedef Vector2 v2;
 typedef struct {
     i32 x, y, z;
 } v3i;
+
 typedef struct {
     u32 x, y, z;
 } v3u;
@@ -48,6 +55,7 @@ typedef struct {
 typedef struct {
     i32 x, y;
 } v2i;
+
 typedef struct {
     u32 x, y;
 } v2u;

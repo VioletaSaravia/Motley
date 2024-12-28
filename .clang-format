@@ -41,5 +41,5 @@ BreakBeforeBraces: Attach
 AllowShortFunctionsOnASingleLine: All
 KeepEmptyLinesAtTheStartOfBlocks: false
 SortIncludes: CaseInsensitive
-IncludeIsMainRegex: '(Test|Main)\.h'
+IncludeIsMainRegex: '(test|main)\.h'
 ...

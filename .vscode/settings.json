@@ -13,6 +13,24 @@
         "toolbar.h": "c",
         "stdlib.h": "c",
         "__tree": "c",
-        "map": "c"
+        "map": "c",
+        "array": "c",
+        "bitset": "c",
+        "string_view": "c",
+        "format": "c",
+        "initializer_list": "c",
+        "span": "c",
+        "valarray": "c",
+        "__hash_table": "c",
+        "__split_buffer": "c",
+        "deque": "c",
+        "list": "c",
+        "queue": "c",
+        "set": "c",
+        "stack": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "unordered_set": "c",
+        "vector": "c"
     }
 }

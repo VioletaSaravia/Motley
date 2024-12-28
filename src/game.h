@@ -22,20 +22,20 @@ typedef struct {
     u32   screenWidth, screenHeight;
     u32   targetFPS;
     char* title;
-    i32   ConfigFlags;
-    Image Icon;
+    u32   ConfigFlags;
+    u32   WindowFlags;
+    char* iconPath;
 } WindowOptions;
 
 void InitGameWindow(WindowOptions* opts) {
     SetConfigFlags(opts->ConfigFlags);
 
     InitWindow(opts->screenWidth, opts->screenHeight, opts->title);
-
-    opts->Icon = LoadImage("");
-    SetWindowIcon(opts->Icon);
+    SetWindowState(opts->WindowFlags);
+    SetWindowIcon(LoadImage(opts->iconPath));
 }
 
-void SetGameWindow(WindowOptions* opts) { SetTargetFPS(opts->targetFPS); }
+void SetGameWindow(WindowOptions* opts) {}
 
 // ====== KEYBINDS =====
 
@@ -83,7 +83,7 @@ typedef enum {
 
 typedef struct {
     InputType Type;
-    // TODO Modifiers
+    // TODO: Modifiers
     i32 Key;
 } Keybind;
 

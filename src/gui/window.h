@@ -11,7 +11,6 @@
 typedef struct {
     v2          Anchor;
     v2          Size;
-    v2          TitlebarSize;
     bool        Active;
     bool        Moving;
     const char* Title;
@@ -20,8 +19,7 @@ typedef struct {
 void UpdateWindow(Window* state) {
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
         IsPointInRectangle(GetMousePosition(),
-                           (Rectangle){state->Anchor.x, state->Anchor.y, state->TitlebarSize.x,
-                                       state->TitlebarSize.y})) {
+                           (Rectangle){state->Anchor.x, state->Anchor.y, state->Size.x, 24})) {
         state->Moving = true;
     }
 

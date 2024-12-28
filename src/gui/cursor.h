@@ -11,23 +11,28 @@
 #include "tilemap.h"
 #include "toolbar.h"
 
-void DrawTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar) {
-    v2i coords   = {(cursor->Pos.x - map->Pos.x + 0.5f * map->tileSize.x) / map->tileSize.x,
-                    (cursor->Pos.y - map->Pos.y + 0.5f * map->tileSize.y) / map->tileSize.y};
+void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const ToolbarState* toolbar) {
+    if (!cursor->InMap || cursor->State == CURSOR_STATE_BOXING || !map->Window.Active) return;
+
+    v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
+    v2 mousePos = GetMousePosition();
+
     v2  selected = toolbar->PaintTileActive ? (v2){map->tileSize.x * cursor->Selected.x,
                                                    map->tileSize.y * cursor->Selected.y}
                                             : (v2){};
-
-    v2  halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
     f32 rotation = toolbar->PaintRotActive ? cursor->Rot * 90.0f : 0.0f;
+
+    v2 coords = {mousePos.x + halfTile.x - fmodf(mousePos.x, map->tileSize.x) +
+                     fmodf(map->Window.Anchor.x, map->tileSize.x),
+                 mousePos.y + halfTile.y - fmodf(mousePos.y, map->tileSize.y) +
+                     fmodf(map->Window.Anchor.y, map->tileSize.y)};
 
     if (toolbar->PaintFgActive) {
         BeginShaderMode(FgCursor);
         DrawTexturePro(map->Tileset,
                        (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
-                       (Rectangle){coords.x * map->tileSize.x, coords.y * map->tileSize.y,
-                                   map->tileSize.x, map->tileSize.y},
-                       halfTile, rotation, map->Palette[cursor->FG]);
+                       (Rectangle){coords.x, coords.y, map->tileSize.x, map->tileSize.y}, halfTile,
+                       rotation, map->Palette[cursor->FG]);
         EndShaderMode();
     }
 
@@ -35,22 +40,24 @@ void DrawTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar) 
         BeginShaderMode(BgCursor);
         DrawTexturePro(map->Tileset,
                        (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
-                       (Rectangle){coords.x * map->tileSize.x, coords.y * map->tileSize.y,
-                                   map->tileSize.x, map->tileSize.y},
-                       halfTile, rotation, map->Palette[cursor->BG]);
+                       (Rectangle){coords.x, coords.y, map->tileSize.x, map->tileSize.y}, halfTile,
+                       rotation, map->Palette[cursor->BG]);
         EndShaderMode();
     }
 }
 
 void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar) {
-    cursor->Pos = GetMousePosition();
+    if (!map->Window.Active) return;
+
+    v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
+    v2 mousePos = GetMousePosition();
 
     cursor->InMap = IsPointInRectangle(
-        cursor->Pos, (Rectangle){map->Pos.x, map->Pos.y, map->Size.x * map->tileSize.x,
-                                 map->Size.y * map->tileSize.y});
+        mousePos, (Rectangle){map->Window.Anchor.x, map->Window.Anchor.y + 24,
+                              map->Size.x * map->tileSize.x, map->Size.y * map->tileSize.y});
 
-    v2i coords = {(cursor->Pos.x - map->Pos.x + 0.5f * map->tileSize.x) / map->tileSize.x,
-                  (cursor->Pos.y - map->Pos.y + 0.5f * map->tileSize.y) / map->tileSize.y};
+    v2  absPos = Vector2Subtract(mousePos, Vector2Add(map->Window.Anchor, (v2){0, 24}));
+    v2i coords = {absPos.x / map->tileSize.x, absPos.y / map->tileSize.y};
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && cursor->InMap) {
         i32 i = (coords.y * map->Size.x + coords.x) * cursor->InMap;
@@ -72,13 +79,20 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
         cursor->Selected.y += 1;
     if (IsKeyPressed(KEY_R)) cursor->Rot = (cursor->Rot + 1) % 4;
 
-    if (IsKeyPressed(KEY_F)) cursor->FG = (cursor->FG + 1) % map->PaletteSize;
-    if (IsKeyPressed(KEY_B)) cursor->BG = (cursor->BG + 1) % map->PaletteSize;
+    if (IsKeyPressed(KEY_F)) {
+        cursor->FG                  = (cursor->FG + 1) % map->PaletteSize;
+        toolbar->ColorPickerFgValue = map->Palette[cursor->FG];
+    }
+    if (IsKeyPressed(KEY_B)) {
+        cursor->BG                  = (cursor->BG + 1) % map->PaletteSize;
+        toolbar->ColorPickerBgValue = map->Palette[cursor->BG];
+    }
     if (IsKeyPressed(KEY_G)) {
         u8 swap    = cursor->FG;
         cursor->FG = cursor->BG;
         cursor->BG = swap;
     }
+    return;
 
     // ===== BOX SELECT =====
     if (!cursor->InMap) return;
@@ -135,9 +149,11 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
     }
 }
 
-void DrawBoxCursor(Tilemap* map, TilemapCursor* cursor) {
-    DrawRectangleLines(cursor->Box[0].x * map->tileSize.x - map->tileSize.x * 0.5f + map->Pos.x,
-                       cursor->Box[0].y * map->tileSize.y - map->tileSize.y * 0.5f + map->Pos.y,
-                       cursor->Box[1].x * map->tileSize.x, cursor->Box[1].y * map->tileSize.y,
-                       GRAY);
+void DrawBoxCursor(const Tilemap* map, const TilemapCursor* cursor) {
+    if (!cursor->State == CURSOR_STATE_BOXING && !cursor->State == CURSOR_STATE_BOXED) return;
+
+    DrawRectangleLines(
+        cursor->Box[0].x * map->tileSize.x - map->tileSize.x * 0.5f + map->Window.Anchor.x,
+        cursor->Box[0].y * map->tileSize.y - map->tileSize.y * 0.5f + map->Window.Anchor.y,
+        cursor->Box[1].x * map->tileSize.x, cursor->Box[1].y * map->tileSize.y, GRAY);
 }

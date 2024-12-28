@@ -29,7 +29,6 @@ typedef struct {
 } ToolbarState;
 
 ToolbarState InitToolbar(v2 anchor) {
-    // TODO ZII ?
     ToolbarState state = {.ColorPickerFgValue = (Color){},
                           .PaintFgActive      = true,
                           .PaintRotActive     = true,
@@ -37,11 +36,8 @@ ToolbarState InitToolbar(v2 anchor) {
                           .PaintBgActive      = true,
                           .ColorPickerBgValue = (Color){}};
 
-    state.Window = (Window){.Active       = true,
-                            .Anchor       = anchor,
-                            .TitlebarSize = (v2){136, 24},
-                            .Size         = (v2){136, 344},
-                            .Title        = "Toolbar"};
+    state.Window =
+        (Window){.Active = true, .Anchor = anchor, .Size = (v2){136, 344}, .Title = "Toolbar"};
 
     return state;
 }
@@ -53,11 +49,11 @@ void UpdateToolbar(ToolbarState *state) {
     if (IsActionPressed(ACTION_PAINT_ROT)) state->PaintRotActive = !state->PaintRotActive;
 }
 
-static void NewButton(NewTilemapMenuState *state) { state->NewTilemapWindowActive = true; }
+static void NewButton(NewTilemapMenuState *state) { state->Window.Active = true; }
 static void LoadButton() { printf_s("Not implemented\n"); }
 
-void Toolbar(ToolbarState *state, NewTilemapMenuState *newTilemapMenuState, Tilemap *tilemap,
-             TilemapCursor *cursor) {
+void DrawToolbar(ToolbarState *state, NewTilemapMenuState *newTilemapMenuState, Tilemap *tilemap,
+                 TilemapCursor *cursor) {
     static const char *ToolbarWindowText = "Toolbar";
     static const char *NewButtonText     = "#08#New";
     static const char *LoadButtonText    = "#05#Load";
@@ -70,11 +66,10 @@ void Toolbar(ToolbarState *state, NewTilemapMenuState *newTilemapMenuState, Tile
 
     UpdateWindow(&state->Window);
 
-    if (tilemap) {
-        state->ColorPickerFgValue = tilemap->Palette[cursor->FG];
-        state->ColorPickerBgValue = tilemap->Palette[cursor->BG];
-
-        // TODO: Color setters
+    if (tilemap->Window.Active) {
+        // FIXME: Overrides the first colors with white
+        // tilemap->Palette[cursor->FG] = state->ColorPickerFgValue;
+        // tilemap->Palette[cursor->BG] = state->ColorPickerBgValue;
     }
 
     GuiLine((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 56, 104, 16}, "");
@@ -100,7 +95,7 @@ void Toolbar(ToolbarState *state, NewTilemapMenuState *newTilemapMenuState, Tile
     GuiColorPicker((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 296, 96, 40},
                    "", &state->ColorPickerBgValue);
 
-    if (!tilemap) return;
+    if (!tilemap->Window.Active) return;
 
     u32 i = 0;
     for (u32 y = 0; y < 4; y++) {
@@ -123,17 +118,22 @@ typedef struct {
     f32    Scale;
 } TilesetState;
 
-TilesetState NewTilesetWindow(v2 pos) {
+TilesetState InitTilesetWindow(v2 pos) {
     return (TilesetState){
         .Scale  = 1.0f / 3.0f,
-        .Window = {
-            .Active = true, .Anchor = pos, .Title = "Tileset", .Size = {}, .TitlebarSize = {}}};
+        .Window = {.Active = true, .Anchor = pos, .Title = "Tileset", .Size = {}}};
+}
+
+void UpdateTileset(TilesetState *state, const Tilemap *map) {
+    if (!state->Window.Active || !map->Window.Active) return;
+
+    state->Window.Size =
+        (v2){map->Tileset.width * state->Scale, map->Tileset.height * state->Scale + 24};
 }
 
 void DrawTileset(TilesetState *state, const Tilemap *map, TilemapCursor *cursor) {
-    state->Window.TitlebarSize = (v2){map->Tileset.width * state->Scale, 24};
-    state->Window.Size =
-        (v2){map->Tileset.width * state->Scale, map->Tileset.height * state->Scale + 24};
+    if (!state->Window.Active || !map->Window.Active) return;
+
     UpdateWindow(&state->Window);
 
     v2 tAnchor = Vector2Add(state->Window.Anchor, (v2){0, 24});
