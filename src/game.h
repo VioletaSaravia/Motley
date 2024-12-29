@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdio.h>
+
 #ifndef RAYGUI_IMPLEMENTATION
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"

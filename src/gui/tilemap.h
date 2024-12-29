@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef RAYGUI_IMPLEMENTATION
 #define RAYGUI_IMPLEMENTATION
@@ -84,7 +85,7 @@ Color* LoadPaletteFromHex(const char* path, u32* size) {
             if (newline) *newline = '\0';
 
             u32 rgb;
-            if (sscanf_s(line, "%x", &rgb) != 1) {
+            if (sscanf(line, "%x", &rgb) != 1) {
                 TraceLog(LOG_ERROR, "Error parsing line: %s\n", line);
                 return MALLOC_T(Color, 2);
             }
