@@ -32,7 +32,7 @@ Window InitWindowBox(const char* title, v2 size) {
 void UpdateWindow(Window* state) {
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
        CheckCollisionPointRec(GetMousePosition(),
-                           (Rectangle){state->Anchor.x, state->Anchor.y, state->Size.x, 24})) {
+                           (Rectangle){state->Anchor.x, state->Anchor.y, state->Size.x, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT})) {
         state->Moving         = true;
         GlobalGuiState.Moving = true;
     }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifndef RAYGUI_IMPLEMENTATION
 #define RAYGUI_IMPLEMENTATION

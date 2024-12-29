@@ -11,6 +11,8 @@ out vec4 finalColor;
 
 void main()
 {
-    vec4 color = texture(texture0, fragTexCoord);
-    finalColor = vec4(color.r < 0.7 ? color1 : color2, 1);
+    finalColor = vec4(mix(
+        color2, 
+        color1, 
+        texture(texture0, fragTexCoord).r), 1);
 }
