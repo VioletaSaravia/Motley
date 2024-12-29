@@ -157,7 +157,7 @@ TYPES_API bool EndsWith(const char* str, const char* suffix) {
 TYPES_API i32 CountLines(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
-        perror("Error opening file");
+        TraceLog(LOG_ERROR, "Can't open file");
         return -1;
     }
 
@@ -176,22 +176,38 @@ TYPES_API i32 CountLines(const char* filename) {
 
 // ===== COLLISION =====
 
-TYPES_API bool IsPointInRectangle(v2 p, Rectangle r) {
-    return (p.x >= r.x && p.x <= r.x + r.width && p.y >= r.y && p.y <= r.y + r.height);
-}
-
-TYPES_API bool IsRectangleInRectangle(Rectangle r1, Rectangle r2) {
-    return !(r1.x + r1.width <= r2.x ||   // r1 is to the left of r2
-             r2.x + r2.width <= r1.x ||   // r2 is to the left of r1
-             r1.y + r1.height <= r2.y ||  // r1 is above r2
-             r2.y + r2.height <= r1.y);   // r2 is above r1
-}
-
-TYPES_API Rectangle GetRectangleOverlap(Rectangle r1, Rectangle r2) {
+TYPES_API Rectangle CheckOverlapRecs(Rectangle r1, Rectangle r2) {
     float x      = fmaxf(r1.x, r2.x);
     float y      = fmaxf(r1.y, r2.y);
     float width  = fminf(r1.x + r1.width, r2.x + r2.width);
     float height = fminf(r1.y + r1.height, r2.y + r2.height);
 
-    return (x >= width || y >= height) ? (Rectangle){} : (Rectangle){x, y, width - x, height - y};
+    return (x > width || y > height) ? (Rectangle){} : (Rectangle){x, y, width - x, height - y};
 }
+
+// ===== MEMORY =====
+
+#define DEFAULT_ARENA 1024
+
+typedef struct {
+    u8* buffer;
+    u64 offset;
+    u64 size;
+} Arena;
+
+Arena InitArena(u64 size) {
+    if (!size) size = DEFAULT_ARENA;
+    return (Arena){.buffer = MALLOC_T(u8, size), .offset = 0, .size = size};
+}
+
+void* ArenaAlloc(Arena* arena, u64 size) {
+    if (arena->offset + size > arena->size) arena->offset = 0;
+
+    void* ptr = &arena->buffer[arena->offset];
+
+    arena->offset += size;
+
+    return ptr;
+}
+
+#define AALLOC(arena, type, size) ((type*)ArenaAlloc(arena, sizeof(type) * size))

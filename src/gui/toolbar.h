@@ -13,9 +13,6 @@
 #include "window.h"
 
 typedef struct {
-    // v2 anchor;
-    //  bool ToolbarWindowActive;
-
     Window Window;
 
     bool PaintTileActive;
@@ -43,17 +40,17 @@ ToolbarState InitToolbar(v2 anchor) {
 }
 
 void UpdateToolbar(ToolbarState *state) {
+    if (GlobalGuiState.Editing) return;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_T)) state->Window.Active = true;
+
     if (IsActionPressed(ACTION_PAINT_TILE)) state->PaintTileActive = !state->PaintTileActive;
     if (IsActionPressed(ACTION_PAINT_FG)) state->PaintFgActive = !state->PaintFgActive;
     if (IsActionPressed(ACTION_PAINT_BG)) state->PaintBgActive = !state->PaintBgActive;
     if (IsActionPressed(ACTION_PAINT_ROT)) state->PaintRotActive = !state->PaintRotActive;
 }
 
-static void NewButton(NewTilemapMenuState *state) { state->Window.Active = true; }
-static void LoadButton() { printf_s("Not implemented\n"); }
-
-void DrawToolbar(ToolbarState *state, NewTilemapMenuState *newTilemapMenuState, Tilemap *tilemap,
-                 TilemapCursor *cursor) {
+void DrawToolbar(ToolbarState *state, PopupNewState *newTilemapMenuState,
+                 PopupLoadState *popupLoadState, Tilemap *tilemap, TilemapCursor *cursor) {
     static const char *ToolbarWindowText = "Toolbar";
     static const char *NewButtonText     = "#08#New";
     static const char *LoadButtonText    = "#05#Load";
@@ -76,10 +73,11 @@ void DrawToolbar(ToolbarState *state, NewTilemapMenuState *newTilemapMenuState, 
 
     if (GuiButton((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 32, 56, 24},
                   NewButtonText))
-        NewButton(newTilemapMenuState);
+        newTilemapMenuState->Window.Active = true;
+
     if (GuiButton((Rectangle){state->Window.Anchor.x + 72, state->Window.Anchor.y + 32, 56, 24},
                   LoadButtonText))
-        LoadButton();
+        popupLoadState->Window.Active = true;
 
     GuiToggle((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 72, 24, 24},
               PaintTileText, &state->PaintTileActive);
@@ -97,7 +95,7 @@ void DrawToolbar(ToolbarState *state, NewTilemapMenuState *newTilemapMenuState, 
 
     if (!tilemap->Window.Active) return;
 
-    u32 i = 0;
+    u32 i = 1;
     for (u32 y = 0; y < 4; y++) {
         for (u32 x = 0; x < 4; x++) {
             Rectangle r = {state->Window.Anchor.x + 8 + x * 32,
@@ -108,9 +106,10 @@ void DrawToolbar(ToolbarState *state, NewTilemapMenuState *newTilemapMenuState, 
             if (cursor->FG == i) DrawRectangleLines(r.x, r.y, r.width, r.height, GREEN);
             if (cursor->BG == i) DrawRectangleLines(r.x, r.y, r.width, r.height, YELLOW);
 
-            if (i++ >= tilemap->PaletteSize) break;
+            if (i++ >= tilemap->PaletteSize) goto END;
         }
     }
+END:
 }
 
 typedef struct {
@@ -120,12 +119,13 @@ typedef struct {
 
 TilesetState InitTilesetWindow(v2 pos) {
     return (TilesetState){
-        .Scale  = 1.0f / 3.0f,
-        .Window = {.Active = true, .Anchor = pos, .Title = "Tileset", .Size = {}}};
+        .Scale = 1.0f, .Window = {.Active = true, .Anchor = pos, .Title = "Tileset", .Size = {}}};
 }
 
 void UpdateTileset(TilesetState *state, const Tilemap *map) {
     if (!state->Window.Active || !map->Window.Active) return;
+
+    state->Scale = map->tileSize.x == 24 ? 0.5f : 1.0f;
 
     state->Window.Size =
         (v2){map->Tileset.width * state->Scale, map->Tileset.height * state->Scale + 24};
@@ -152,7 +152,7 @@ void DrawTileset(TilesetState *state, const Tilemap *map, TilemapCursor *cursor)
                        (i32)(cursor->Selected.y * scaledTile.y) + tAnchor.y, scaledTile.x,
                        scaledTile.y, GREEN);
 
-    if (IsPointInRectangle(GetMousePosition(),
+    if (CheckCollisionPointRec(GetMousePosition(),
                            (Rectangle){tAnchor.x, tAnchor.y, map->Tileset.width * state->Scale,
                                        map->Tileset.height * state->Scale})) {
         v2 cur = {GetMouseX() - tAnchor.x - GetMouseX() % scaledTile.x,
@@ -161,7 +161,7 @@ void DrawTileset(TilesetState *state, const Tilemap *map, TilemapCursor *cursor)
         DrawRectangleLines(cur.x + tAnchor.x, cur.y + tAnchor.y, scaledTile.x, scaledTile.y, BLUE);
 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            cursor->Selected = (v2){(i32)(cur.x / scaledTile.x), (i32)(cur.y / scaledTile.y)};
+            cursor->Selected = (v2i){cur.x / scaledTile.x, cur.y / scaledTile.y};
         }
     }
 }

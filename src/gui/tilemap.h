@@ -8,6 +8,7 @@
 #endif
 
 #include "../types.h"
+#include "popup_load.h"
 #include "raylib.h"
 #include "window.h"
 
@@ -44,12 +45,12 @@ typedef struct {
     bool mapSizeYEditMode;
     i32  mapSizeYValue;
 
-} NewTilemapMenuState;
+} PopupNewState;
 
 typedef enum { CURSOR_STATE_SINGLE, CURSOR_STATE_BOXING, CURSOR_STATE_BOXED } CursorState;
 
 typedef struct {
-    v2   Selected;
+    v2i  Selected;
     u8   FG;
     u8   BG;
     u8   Rot;
@@ -103,7 +104,7 @@ Color* LoadPaletteFromHex(const char* path, u32* size) {
     return palette;
 }
 
-Tilemap InitTilemap(const NewTilemapMenuState* state) {
+Tilemap InitTilemap(const PopupNewState* state, Arena* arena) {
     u32     paletteSize = 0;
     Color*  palette     = LoadPaletteFromHex(state->PalettePathText, &paletteSize);
     Tilemap map         = {
@@ -115,18 +116,14 @@ Tilemap InitTilemap(const NewTilemapMenuState* state) {
                 .PaletteSize = paletteSize,
     };
 
-    v2 windowSize = {map.Size.x * map.tileSize.x, map.Size.y * map.tileSize.y};
-    map.Window    = (Window){.Active = true,
-                             .Anchor = (v2){GetScreenWidth() * 0.5f - windowSize.x * 0.5f,
-                                            GetScreenHeight() * 0.5f - windowSize.y * 0.5f},
-                             .Size   = windowSize,
-                             .Title  = "*New tilemap*"};
+    map.Window = InitWindowBox("*New tilemap*",
+                               (v2){map.Size.x * map.tileSize.x, map.Size.y * map.tileSize.y});
 
     u32 tileCount = map.Size.x * map.Size.y;
-    map.Tile      = MALLOC_T(v2, tileCount);
-    map.FG        = MALLOC_T(u8, tileCount);
-    map.BG        = MALLOC_T(u8, tileCount);
-    map.Rot       = MALLOC_T(u8, tileCount);
+    map.Tile      = AALLOC(arena, v2, tileCount);
+    map.FG        = AALLOC(arena, u8, tileCount);
+    map.BG        = AALLOC(arena, u8, tileCount);
+    map.Rot       = AALLOC(arena, u8, tileCount);
 
     for (u32 x = 0; x < map.Size.x; x++) {
         for (u32 y = 0; y < map.Size.y; y++) {
@@ -141,29 +138,15 @@ Tilemap InitTilemap(const NewTilemapMenuState* state) {
     return map;
 }
 
-Tilemap LoadTilemap(const char* path) {
-    Tilemap map = {};
-
-    FILE* file = fopen(path, "r");
-    if (file == NULL) {
-        TraceLog(LOG_ERROR, "Couldn't load tilemap");
-        return map;
-    }
-
-    TraceLog(LOG_INFO, "Tilemap loaded successfully");
-    return map;  // TODO
-}
-
 bool SaveTilemap(Tilemap* this, const char* path) {
-    if (!this->Window.Active || !IsKeyPressed(KEY_Y)) return false;
+    if (GlobalGuiState.Editing) return false;
+    if (!this->Window.Active || !IsKeyDown(KEY_LEFT_CONTROL) || !IsKeyPressed(KEY_S)) return false;
 
     FILE* file = fopen(path, "w");
     if (file == NULL) {
         TraceLog(LOG_ERROR, "Couldn't save tilemap to file");
         return false;
     }
-
-    // fprintf(file, "%.2f %.2f\n", this->Pos.x, this->Pos.y);
 
     fprintf(file, "%d %d\n", this->Size.x, this->Size.y);
 
@@ -192,6 +175,8 @@ bool SaveTilemap(Tilemap* this, const char* path) {
     fprintf(file, this->TilesetPath);
     fprintf(file, "\n");
 
+    fprintf(file, "%u\n", this->PaletteSize);
+
     for (u32 i = 0; i < this->PaletteSize; i++) {
         fprintf(file, "%d %d %d %d ", this->Palette[i].r, this->Palette[i].g, this->Palette[i].b,
                 this->Palette[i].a);
@@ -201,19 +186,96 @@ bool SaveTilemap(Tilemap* this, const char* path) {
     fclose(file);
 
     TraceLog(LOG_INFO, "Tilemap saved successfully");
+
+    this->Window.Title = path;
     return true;
+}
+
+Tilemap InitTilemapFromFile(PopupLoadState* state, Arena* arena) {
+    FILE* file = fopen(state->TilemapPathTextBoxText, "r");
+    if (file == NULL) {
+        TraceLog(LOG_ERROR, "Couldn't open tilemap file");
+        return (Tilemap){};
+    }
+
+    Tilemap this = {};
+
+    fscanf(file, "%d %d", &this.Size.x, &this.Size.y);
+
+    fscanf(file, "%d %d", &this.tileSize.x, &this.tileSize.y);
+
+    u32 tileCount = this.Size.x * this.Size.y;
+    this.Tile     = AALLOC(arena, v2, tileCount);
+    this.FG       = AALLOC(arena, u8, tileCount);
+    this.BG       = AALLOC(arena, u8, tileCount);
+    this.Rot      = AALLOC(arena, u8, tileCount);
+
+    for (u32 i = 0; i < tileCount; i++) {
+        fscanf(file, "%f %f", &this.Tile[i].x, &this.Tile[i].y);
+    }
+
+    for (u32 i = 0; i < tileCount; i++) {
+        fscanf(file, "%hhu", &this.FG[i]);
+    }
+
+    for (u32 i = 0; i < tileCount; i++) {
+        fscanf(file, "%hhu", &this.BG[i]);
+    }
+
+    for (u32 i = 0; i < tileCount; i++) {
+        fscanf(file, "%hhu", &this.Rot[i]);
+    }
+
+    char tilesetPath[256];
+    fscanf(file, "%255s", tilesetPath);
+    this.TilesetPath = strdup(tilesetPath);
+    this.Tileset     = LoadTexture(this.TilesetPath);
+
+    fscanf(file, "%u", &this.PaletteSize);
+    this.Palette = AALLOC(arena, Color, this.PaletteSize);
+    for (u32 i = 0; i < this.PaletteSize; i++) {
+        fscanf(file, "%hhu %hhu %hhu %hhu", &this.Palette[i].r, &this.Palette[i].g,
+               &this.Palette[i].b, &this.Palette[i].a);
+    }
+
+    fclose(file);
+
+    this.Window = InitWindowBox(state->TilemapPathTextBoxText,
+                                (v2){this.Size.x * this.tileSize.x, this.Size.y * this.tileSize.y});
+
+    TraceLog(LOG_INFO, "Tilemap loaded successfully");
+    return this;
 }
 
 static Shader FgTilemap;
 static Shader FgCursor;
 static Shader BgTilemap;
 static Shader BgCursor;
+static Shader wallpaperColor;
 
 void InitTilemapShaders() {
-    FgTilemap = LoadShader("shaders/tiles.vert", "shaders/tile_fg.frag");
-    FgCursor  = LoadShader("shaders/tiles.vert", "shaders/tile_fg_cursor.frag");
-    BgTilemap = LoadShader("shaders/tiles.vert", "shaders/tile_bg.frag");
-    BgCursor  = LoadShader("shaders/tiles.vert", "shaders/tile_bg_cursor.frag");
+    FgTilemap = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_fg.frag");
+    FgCursor  = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_fg_cursor.frag");
+    BgTilemap = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_bg.frag");
+    BgCursor  = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_bg_cursor.frag");
+
+    wallpaperColor = LoadShader("", "src/shaders/wallpaper.frag");
+    v3 col1        = {0.34, 0.34, 0.34};
+    v3 col2        = {0.55, 0.55, 0.55};
+    SetShaderValue(wallpaperColor, GetShaderLocation(wallpaperColor, "color1"), &col1,
+                   SHADER_UNIFORM_VEC3);
+    SetShaderValue(wallpaperColor, GetShaderLocation(wallpaperColor, "color2"), &col2,
+                   SHADER_UNIFORM_VEC3);
+}
+
+void DrawBg(Texture bg) {
+    BeginShaderMode(wallpaperColor);
+    // TODO: Texture wrap doesn't work?
+    DrawTexture(bg, 0, 0, WHITE);
+    DrawTexture(bg, bg.width, 0, WHITE);
+    DrawTexture(bg, 0, bg.height, WHITE);
+    DrawTexture(bg, bg.width, bg.height, WHITE);
+    EndShaderMode();
 }
 
 void DrawTilemap(Tilemap* map) {
@@ -225,6 +287,7 @@ void DrawTilemap(Tilemap* map) {
                   map->Window.Anchor.y + map->tileSize.y * 0.5f + 24};
 
     BeginShaderMode(FgTilemap);
+    // TODO Should be a single draw.
     for (u32 x = 0; x < map->Size.x; x++) {
         for (u32 y = 0; y < map->Size.y; y++) {
             u32 coord = y * map->Size.x + x;
@@ -257,9 +320,12 @@ void DrawTilemap(Tilemap* map) {
     EndShaderMode();
 }
 
-NewTilemapMenuState InitNewTilemapMenu(v2 pos) {
-    NewTilemapMenuState state = {
-        .Window = {.Active = false, .Anchor = pos, .Title = "New tilemap", .Size = {272, 144}}};
+PopupNewState InitNewTilemapMenu() {
+    PopupNewState state = {
+        .Window = {.Active = false,
+                   .Anchor = {GetScreenWidth() * 0.5f - 140, GetScreenHeight() * 0.5f - 76},
+                   .Title  = "New tilemap",
+                   .Size   = {272, 144}}};
 
     state.TilesetPathEditMode = false;
     strcpy(state.TilesetPathText, "assets/mrmox3.png");
@@ -277,8 +343,11 @@ NewTilemapMenuState InitNewTilemapMenu(v2 pos) {
     return state;
 }
 
-bool DrawNewTilemapMenu(NewTilemapMenuState* state) {
-    if (!state->Window.Active) return false;
+bool DrawNewTilemapMenu(PopupNewState* state) {
+    if (!state->Window.Active) {
+        return false;
+    }
+    GlobalGuiState.Editing = true;
 
     static const char* tileSizeLabelText       = "Tile Size";
     static const char* mapSizeLabelText        = "Map Size";
@@ -312,7 +381,10 @@ bool DrawNewTilemapMenu(NewTilemapMenuState* state) {
         bool newTilemap = GuiButton((Rectangle){tAnchor.x + 72, tAnchor.y + 112, 120, 24},
                                     CreateTilemapButtonText);
 
-        if (newTilemap) state->Window.Active = false;
+        if (newTilemap) {
+            state->Window.Active   = false;
+            GlobalGuiState.Editing = false;
+        }
         return newTilemap;
     }
 }

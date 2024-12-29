@@ -8,6 +8,11 @@
 #include "../types.h"
 #include "raylib.h"
 
+static struct {
+    bool Editing;
+    bool Moving;
+} GlobalGuiState = {};
+
 typedef struct {
     v2          Anchor;
     v2          Size;
@@ -16,11 +21,20 @@ typedef struct {
     const char* Title;
 } Window;
 
+Window InitWindowBox(const char* title, v2 size) {
+    return (Window){.Active = true,
+                    .Anchor = (v2){GetScreenWidth() * 0.5f - size.x * 0.5f,
+                                   GetScreenHeight() * 0.5f - size.y * 0.5f},
+                    .Size   = size,
+                    .Title  = title};
+}
+
 void UpdateWindow(Window* state) {
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
-        IsPointInRectangle(GetMousePosition(),
+       CheckCollisionPointRec(GetMousePosition(),
                            (Rectangle){state->Anchor.x, state->Anchor.y, state->Size.x, 24})) {
-        state->Moving = true;
+        state->Moving         = true;
+        GlobalGuiState.Moving = true;
     }
 
     if (state->Moving) {
@@ -29,9 +43,15 @@ void UpdateWindow(Window* state) {
 
     if ((IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && state->Moving) ||
         IsMouseButtonUp(MOUSE_BUTTON_LEFT)) {
-        state->Moving = false;
+        state->Moving         = false;
+        GlobalGuiState.Moving = false;
     }
 
-    state->Active = !GuiWindowBox(
+    bool xPressed = GuiWindowBox(
         (Rectangle){state->Anchor.x, state->Anchor.y, state->Size.x, state->Size.y}, state->Title);
+
+    if (xPressed && state->Active) {
+        state->Active          = false;
+        GlobalGuiState.Editing = false;
+    }
 }

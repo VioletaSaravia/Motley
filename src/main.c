@@ -1,5 +1,6 @@
 #include "game.h"
 #include "gui/cursor.h"
+#include "gui/popup_load.h"
 #include "gui/tilemap.h"
 #include "gui/toolbar.h"
 #include "types.h"
@@ -10,22 +11,25 @@ i32 main() {
                             .targetFPS    = 0,
                             .title        = "Motley",
                             .ConfigFlags  = 0,  // FLAG_MSAA_4X_HINT
-                            .WindowFlags  = FLAG_WINDOW_RESIZABLE,
-                            .iconPath     = ""};
-
+                            .WindowFlags  = FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI,
+                            .iconPath     = "",
+                            .guiStylePath = ""};
     InitGameWindow(&window);
     SetGameWindow(&window);
     InitTilemapShaders();
+    Texture bg = LoadTexture("assets/bg.png");
 
-    NewTilemapMenuState newTmMenu =
-        InitNewTilemapMenu((v2){GetScreenWidth() * 0.5f - 140, GetScreenHeight() * 0.5f - 76});
+    PopupNewState  popupNew  = InitNewTilemapMenu();
+    PopupLoadState popupLoad = InitPopupLoad();
+
     ToolbarState toolbar =
         InitToolbar((v2){window.screenWidth * 0.025f, window.screenHeight * 0.05f});
     TilesetState tileset =
         InitTilesetWindow((v2){window.screenWidth * 0.025f, window.screenHeight * 0.6f});
-    TilemapCursor cursor = {.FG = 1, .BG = 0, .Box = {}, .State = CURSOR_STATE_SINGLE};
+    TilemapCursor cursor = {.FG = 1, .BG = 0};
 
-    Tilemap tilemap = {};
+    Arena   tilemapArena = InitArena(250 << 10);
+    Tilemap tilemap      = {};
 
     f32 delta;
     while (!WindowShouldClose()) {
@@ -36,19 +40,22 @@ i32 main() {
         UpdateTileCursor(&tilemap, &cursor, &toolbar);
         UpdateToolbar(&toolbar);
         UpdateTileset(&tileset, &tilemap);
-        SaveTilemap(&tilemap, "tilemap.txt");
+        SaveTilemap(&tilemap, "tilemap.txt");  // TODO: Save popup
 
         BeginDrawing();
         {
-            ClearBackground((Color){76, 79, 105, 255});
+            DrawBg(bg);
 
             DrawTilemap(&tilemap);
             DrawTileCursor(&tilemap, &cursor, &toolbar);
             DrawBoxCursor(&tilemap, &cursor);
-            DrawToolbar(&toolbar, &newTmMenu, &tilemap, &cursor);
+            DrawToolbar(&toolbar, &popupNew, &popupLoad, &tilemap, &cursor);
             DrawTileset(&tileset, &tilemap, &cursor);
-            if (DrawNewTilemapMenu(&newTmMenu)) {
-                tilemap = InitTilemap(&newTmMenu);
+            if (DrawNewTilemapMenu(&popupNew)) {
+                tilemap = InitTilemap(&popupNew, &tilemapArena);
+            }
+            if (DrawPopupLoad(&popupLoad)) {
+                tilemap = InitTilemapFromFile(&popupLoad, &tilemapArena);
             }
         }
         EndDrawing();

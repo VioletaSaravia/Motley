@@ -12,47 +12,53 @@
 #include "toolbar.h"
 
 void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const ToolbarState* toolbar) {
-    if (!cursor->InMap || cursor->State == CURSOR_STATE_BOXING || !map->Window.Active) return;
+    // if (!cursor->InMap || cursor->State == CURSOR_STATE_BOXING || !map->Window.Active) return;
+    if (cursor->InMap && cursor->State != CURSOR_STATE_BOXING)
+        SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
+    else
+        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
 
-    v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
-    v2 mousePos = GetMousePosition();
+    // TODO I Hate this.
 
-    v2  selected = toolbar->PaintTileActive ? (v2){map->tileSize.x * cursor->Selected.x,
-                                                   map->tileSize.y * cursor->Selected.y}
-                                            : (v2){};
-    f32 rotation = toolbar->PaintRotActive ? cursor->Rot * 90.0f : 0.0f;
+    // v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
+    // v2 mousePos = GetMousePosition();
 
-    v2 coords = {mousePos.x + halfTile.x - fmodf(mousePos.x, map->tileSize.x) +
-                     fmodf(map->Window.Anchor.x, map->tileSize.x),
-                 mousePos.y + halfTile.y - fmodf(mousePos.y, map->tileSize.y) +
-                     fmodf(map->Window.Anchor.y, map->tileSize.y)};
+    // v2  selected = toolbar->PaintTileActive ? (v2){map->tileSize.x * cursor->Selected.x,
+    //                                                map->tileSize.y * cursor->Selected.y}
+    //                                         : (v2){};
+    // f32 rotation = toolbar->PaintRotActive ? cursor->Rot * 90.0f : 0.0f;
 
-    if (toolbar->PaintFgActive) {
-        BeginShaderMode(FgCursor);
-        DrawTexturePro(map->Tileset,
-                       (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
-                       (Rectangle){coords.x, coords.y, map->tileSize.x, map->tileSize.y}, halfTile,
-                       rotation, map->Palette[cursor->FG]);
-        EndShaderMode();
-    }
+    // v2 coords = {mousePos.x + halfTile.x - fmodf(mousePos.x, map->tileSize.x) +
+    //                  fmodf(map->Window.Anchor.x, map->tileSize.x),
+    //              mousePos.y + halfTile.y - fmodf(mousePos.y, map->tileSize.y) +
+    //                  fmodf(map->Window.Anchor.y, map->tileSize.y)};
 
-    if (toolbar->PaintBgActive) {
-        BeginShaderMode(BgCursor);
-        DrawTexturePro(map->Tileset,
-                       (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
-                       (Rectangle){coords.x, coords.y, map->tileSize.x, map->tileSize.y}, halfTile,
-                       rotation, map->Palette[cursor->BG]);
-        EndShaderMode();
-    }
+    // if (toolbar->PaintFgActive) {
+    //     BeginShaderMode(FgCursor);
+    //     DrawTexturePro(map->Tileset,
+    //                    (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
+    //                    (Rectangle){coords.x, coords.y, map->tileSize.x, map->tileSize.y},
+    //                    halfTile, rotation, map->Palette[cursor->FG]);
+    //     EndShaderMode();
+    // }
+
+    // if (toolbar->PaintBgActive) {
+    //     BeginShaderMode(BgCursor);
+    //     DrawTexturePro(map->Tileset,
+    //                    (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
+    //                    (Rectangle){coords.x, coords.y, map->tileSize.x, map->tileSize.y},
+    //                    halfTile, rotation, map->Palette[cursor->BG]);
+    //     EndShaderMode();
+    // }
 }
 
 void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar) {
-    if (!map->Window.Active) return;
+    if (!map->Window.Active || GlobalGuiState.Editing || GlobalGuiState.Moving) return;
 
     v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
     v2 mousePos = GetMousePosition();
 
-    cursor->InMap = IsPointInRectangle(
+    cursor->InMap =CheckCollisionPointRec(
         mousePos, (Rectangle){map->Window.Anchor.x, map->Window.Anchor.y + 24,
                               map->Size.x * map->tileSize.x, map->Size.y * map->tileSize.y});
 
@@ -62,7 +68,7 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && cursor->InMap) {
         i32 i = (coords.y * map->Size.x + coords.x) * cursor->InMap;
 
-        if (toolbar->PaintTileActive) map->Tile[i] = cursor->Selected;
+        if (toolbar->PaintTileActive) map->Tile[i] = (v2){cursor->Selected.x, cursor->Selected.y};
         if (toolbar->PaintFgActive) map->FG[i] = cursor->FG;
         if (toolbar->PaintBgActive) map->BG[i] = cursor->BG;
         if (toolbar->PaintRotActive) map->Rot[i] = cursor->Rot;

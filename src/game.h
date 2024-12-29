@@ -1,5 +1,10 @@
 #pragma once
 
+#ifndef RAYGUI_IMPLEMENTATION
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
+#endif
+
 #include "raylib.h"
 #include "raymath.h"
 
@@ -25,10 +30,12 @@ typedef struct {
     u32   ConfigFlags;
     u32   WindowFlags;
     char* iconPath;
+    char* guiStylePath;
 } WindowOptions;
 
 void InitGameWindow(WindowOptions* opts) {
     SetConfigFlags(opts->ConfigFlags);
+    GuiLoadStyle(opts->guiStylePath);
 
     InitWindow(opts->screenWidth, opts->screenHeight, opts->title);
     SetWindowState(opts->WindowFlags);

@@ -1,0 +1,15 @@
+#
+# rgl layout text file (v4.0) - raygui layout file generated using rGuiLayout
+#
+# Number of controls:     4
+#
+# Ref. window:    r <x> <y> <width> <height>
+# Anchor info:    a <id> <name> <posx> <posy> <enabled>
+# Control info:   c <id> <type> <name> <rectangle> <anchor_id> <text>
+#
+r 0 40 -1 -1
+a 001 anchor01 0 0 1
+c 000 0 LoadTilemapWindow 0 0 168 112 1 Load Tilemap
+c 001 5 LoadButton 24 72 120 24 1 Load
+c 002 12 TilemapPathTextBox 48 32 104 24 1 
+c 003 4 TilemapPathLabel 8 32 32 24 1 Path
