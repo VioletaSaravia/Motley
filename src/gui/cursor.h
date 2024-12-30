@@ -13,26 +13,25 @@
 
 void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const ToolbarState* toolbar) {
     // if (!cursor->InMap || cursor->State == CURSOR_STATE_BOXING || !map->Window.Active) return;
-    if (cursor->InMap && cursor->State != CURSOR_STATE_BOXING)
-        SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
-    else
-        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+    SetMouseCursor(cursor->InMap && cursor->State != CURSOR_STATE_BOXING 
+        ? MOUSE_CURSOR_CROSSHAIR 
+        : MOUSE_CURSOR_DEFAULT);
 
-    // TODO I Hate this.
+    v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
+    v2 mousePos = GetMousePosition();
 
-    // v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
-    // v2 mousePos = GetMousePosition();
+    v2  selected = toolbar->PaintTileActive ? (v2){map->tileSize.x * cursor->Selected.x,
+                                                   map->tileSize.y * cursor->Selected.y}
+                                            : (v2){};
+    f32 rotation = toolbar->PaintRotActive ? cursor->Rot * 90.0f : 0.0f;
 
-    // v2  selected = toolbar->PaintTileActive ? (v2){map->tileSize.x * cursor->Selected.x,
-    //                                                map->tileSize.y * cursor->Selected.y}
-    //                                         : (v2){};
-    // f32 rotation = toolbar->PaintRotActive ? cursor->Rot * 90.0f : 0.0f;
+    // TODO: I Hate this.
 
     // v2 coords = {mousePos.x + halfTile.x - fmodf(mousePos.x, map->tileSize.x) +
     //                  fmodf(map->Window.Anchor.x, map->tileSize.x),
     //              mousePos.y + halfTile.y - fmodf(mousePos.y, map->tileSize.y) +
     //                  fmodf(map->Window.Anchor.y, map->tileSize.y)};
-
+    //
     // if (toolbar->PaintFgActive) {
     //     BeginShaderMode(FgCursor);
     //     DrawTexturePro(map->Tileset,
@@ -41,7 +40,7 @@ void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const Toolb
     //                    halfTile, rotation, map->Palette[cursor->FG]);
     //     EndShaderMode();
     // }
-
+    //
     // if (toolbar->PaintBgActive) {
     //     BeginShaderMode(BgCursor);
     //     DrawTexturePro(map->Tileset,
@@ -86,11 +85,13 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
     if (IsKeyPressed(KEY_R)) cursor->Rot = (cursor->Rot + 1) % 4;
 
     if (IsKeyPressed(KEY_F)) {
-        cursor->FG                  = (cursor->FG + 1) % map->PaletteSize;
+        u8 newFg = (cursor->FG + 1) % map->PaletteSize;
+        cursor->FG                  = newFg != cursor->BG ? newFg : (newFg + 1) % map->PaletteSize; 
         toolbar->ColorPickerFgValue = map->Palette[cursor->FG];
     }
     if (IsKeyPressed(KEY_B)) {
-        cursor->BG                  = (cursor->BG + 1) % map->PaletteSize;
+        u8 newBg = (cursor->BG + 1) % map->PaletteSize;
+        cursor->BG                  = newBg != cursor->FG ? newBg : (newBg + 1) % map->PaletteSize; 
         toolbar->ColorPickerBgValue = map->Palette[cursor->BG];
     }
     if (IsKeyPressed(KEY_G)) {
