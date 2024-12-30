@@ -23,9 +23,10 @@ static struct {
     PopupLoadState popupLoad;
 
     Arena   tilemapArena;
-    Tilemap tilemap;
+    Tilemap tilemap[8];
+    u8      tilemapCount;
 
-    Arena undoHistoryArena;  // TODO: Undo
+    Arena undoArena;  // TODO: Undo
 
     Texture bg;
 } Motley = {};
@@ -43,34 +44,41 @@ void InitMotley() {
     Motley.cursor = (TilemapCursor){.FG = 1, .BG = 0};
 
     Motley.tilemapArena = InitArena(250 << 10);
-    Motley.tilemap      = (Tilemap){};
+    Motley.undoArena    = InitArena(128 << 8);
 }
 
 void UpdateMotley() {
-    UpdateTileCursor(&Motley.tilemap, &Motley.cursor, &Motley.toolbar);
+    for (u32 i = 0; i <= Motley.tilemapCount; i++)
+        UpdateTileCursor(&Motley.tilemap[i], &Motley.cursor, &Motley.toolbar);
     UpdateToolbar(&Motley.toolbar);
-    UpdateTileset(&Motley.tileset, &Motley.tilemap);
-    SaveTilemap(&Motley.tilemap, "tilemap.txt");  // TODO: Save popup
+    UpdateTileset(&Motley.tileset, Motley.tilemap);
+    SaveTilemap(Motley.tilemap, "tilemap.txt");  // TODO: Save popup
 }
 
-void CloseMotley() { free(Motley.tilemapArena.buffer); }
+void CloseMotley() {
+    free(Motley.tilemapArena.buffer);
+    free(Motley.undoArena.buffer);
+}
 
 void DrawMotley() {
     DrawBg(Motley.bg);
 
-    DrawTilemap(&Motley.tilemap);
-    DrawTileCursor(&Motley.tilemap, &Motley.cursor, &Motley.toolbar);
-    DrawBoxCursor(&Motley.tilemap, &Motley.cursor);
+    for (u32 i = 0; i <= Motley.tilemapCount; i++) {
+        DrawTilemap(&Motley.tilemap[i]);
+        DrawTileCursor(&Motley.tilemap[i], &Motley.cursor, &Motley.toolbar);
+        DrawBoxCursor(&Motley.tilemap[i], &Motley.cursor);
+    }
 
-    DrawToolbar(&Motley.toolbar, &Motley.popupNew, &Motley.popupLoad, &Motley.tilemap,
+    DrawToolbar(&Motley.toolbar, &Motley.popupNew, &Motley.popupLoad, Motley.tilemap,
                 &Motley.cursor);
-    DrawTileset(&Motley.tileset, &Motley.tilemap, &Motley.cursor);
+    DrawTileset(&Motley.tileset, Motley.tilemap, &Motley.cursor);
 
     if (DrawNewTilemapMenu(&Motley.popupNew)) {
-        Motley.tilemap = InitTilemap(&Motley.popupNew, &Motley.tilemapArena);
+        Motley.tilemap[Motley.tilemapCount++] = InitTilemap(&Motley.popupNew, &Motley.tilemapArena);
     }
     if (DrawPopupLoad(&Motley.popupLoad)) {
-        Motley.tilemap = InitTilemapFromFile(&Motley.popupLoad, &Motley.tilemapArena);
+        Motley.tilemap[Motley.tilemapCount++] =
+            InitTilemapFromFile(&Motley.popupLoad, &Motley.tilemapArena);
     }
 }
 
@@ -84,7 +92,7 @@ i32 main() {
         UpdateMotley();
 
         BeginDrawing();
-        DrawMotley();
+        { DrawMotley(); }
         EndDrawing();
     }
 
