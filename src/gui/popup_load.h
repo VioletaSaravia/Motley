@@ -30,11 +30,11 @@ PopupLoadState InitPopupLoad() {
 }
 
 bool DrawPopupLoad(PopupLoadState *state) {
-    static const char *LoadButtonText        = "Load";
-    static const char *TilemapPathLabelText  = "Path";
+    static const char *LoadButtonText       = "Load";
+    static const char *TilemapPathLabelText = "Path";
 
     if (!state->Window.Active) return false;
-    
+
     UpdateWindow(&state->Window);
 
     if (GuiTextBox((Rectangle){state->Window.Anchor.x + 48, state->Window.Anchor.y + 32, 104, 24},

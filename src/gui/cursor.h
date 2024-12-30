@@ -13,9 +13,8 @@
 
 void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const ToolbarState* toolbar) {
     // if (!cursor->InMap || cursor->State == CURSOR_STATE_BOXING || !map->Window.Active) return;
-    SetMouseCursor(cursor->InMap && cursor->State != CURSOR_STATE_BOXING 
-        ? MOUSE_CURSOR_CROSSHAIR 
-        : MOUSE_CURSOR_DEFAULT);
+    SetMouseCursor(cursor->InMap && cursor->State != CURSOR_STATE_BOXING ? MOUSE_CURSOR_CROSSHAIR
+                                                                         : MOUSE_CURSOR_DEFAULT);
 
     v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
     v2 mousePos = GetMousePosition();
@@ -57,7 +56,7 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
     v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
     v2 mousePos = GetMousePosition();
 
-    cursor->InMap =CheckCollisionPointRec(
+    cursor->InMap = CheckCollisionPointRec(
         mousePos, (Rectangle){map->Window.Anchor.x, map->Window.Anchor.y + 24,
                               map->Size.x * map->tileSize.x, map->Size.y * map->tileSize.y});
 
@@ -85,13 +84,13 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
     if (IsKeyPressed(KEY_R)) cursor->Rot = (cursor->Rot + 1) % 4;
 
     if (IsKeyPressed(KEY_F)) {
-        u8 newFg = (cursor->FG + 1) % map->PaletteSize;
-        cursor->FG                  = newFg != cursor->BG ? newFg : (newFg + 1) % map->PaletteSize; 
+        u8 newFg                    = (cursor->FG + 1) % map->PaletteSize;
+        cursor->FG                  = newFg != cursor->BG ? newFg : (newFg + 1) % map->PaletteSize;
         toolbar->ColorPickerFgValue = map->Palette[cursor->FG];
     }
     if (IsKeyPressed(KEY_B)) {
-        u8 newBg = (cursor->BG + 1) % map->PaletteSize;
-        cursor->BG                  = newBg != cursor->FG ? newBg : (newBg + 1) % map->PaletteSize; 
+        u8 newBg                    = (cursor->BG + 1) % map->PaletteSize;
+        cursor->BG                  = newBg != cursor->FG ? newBg : (newBg + 1) % map->PaletteSize;
         toolbar->ColorPickerBgValue = map->Palette[cursor->BG];
     }
     if (IsKeyPressed(KEY_G)) {

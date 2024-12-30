@@ -51,12 +51,12 @@ void UpdateToolbar(ToolbarState *state) {
 
 void DrawToolbar(ToolbarState *state, PopupNewState *newTilemapMenuState,
                  PopupLoadState *popupLoadState, Tilemap *tilemap, TilemapCursor *cursor) {
-    static const char *NewButtonText     = "#08#New";
-    static const char *LoadButtonText    = "#05#Load";
-    static const char *PaintTileText     = "#23#";
-    static const char *PaintFgText       = "#165#";
-    static const char *PaintBgText       = "#168#";
-    static const char *PaintRotText      = "#076#";
+    static const char *NewButtonText  = "#08#New";
+    static const char *LoadButtonText = "#05#Load";
+    static const char *PaintTileText  = "#23#";
+    static const char *PaintFgText    = "#165#";
+    static const char *PaintBgText    = "#168#";
+    static const char *PaintRotText   = "#076#";
 
     if (!state->Window.Active) return;
 
@@ -152,8 +152,8 @@ void DrawTileset(TilesetState *state, const Tilemap *map, TilemapCursor *cursor)
                        scaledTile.y, GREEN);
 
     if (CheckCollisionPointRec(GetMousePosition(),
-                           (Rectangle){tAnchor.x, tAnchor.y, map->Tileset.width * state->Scale,
-                                       map->Tileset.height * state->Scale})) {
+                               (Rectangle){tAnchor.x, tAnchor.y, map->Tileset.width * state->Scale,
+                                           map->Tileset.height * state->Scale})) {
         v2 cur = {GetMouseX() - tAnchor.x - GetMouseX() % scaledTile.x,
                   GetMouseY() - tAnchor.y - GetMouseY() % scaledTile.y};
 
