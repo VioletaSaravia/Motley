@@ -6,7 +6,7 @@
 #include "types.h"
 
 static WindowOptions window = {
-    .screenWidth  = 683,
+    .screenWidth  = 1024,
     .screenHeight = 768, 
     .targetFPS    = 0,
     .title        = "Motley",

@@ -260,7 +260,7 @@ void InitTilemapShaders() {
     BgTilemap = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_bg.frag");
     BgCursor  = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_bg_cursor.frag");
 
-    wallpaperColor = LoadShader("", "src/shaders/wallpaper.frag");
+    wallpaperColor = LoadShader("src/shaders/tiles.vert", "src/shaders/wallpaper.frag");
     v3 col1        = {0.34, 0.34, 0.34};
     v3 col2        = {0.55, 0.55, 0.55};
     SetShaderValue(wallpaperColor, GetShaderLocation(wallpaperColor, "color1"), &col1,
@@ -345,47 +345,42 @@ PopupNewState InitNewTilemapMenu() {
 }
 
 bool DrawNewTilemapMenu(PopupNewState* state) {
-    if (!state->Window.Active) {
-        return false;
-    }
+    if (!state->Window.Active) return false;
+
     GlobalGuiState.Editing = true;
 
     static const char* tileSizeLabelText       = "Tile Size";
     static const char* mapSizeLabelText        = "Map Size";
     static const char* CreateTilemapButtonText = "Create Tilemap";
 
-    if (state->Window.Active) {
-        UpdateWindow(&state->Window);
-        v2 tAnchor = state->Window.Anchor;
+    UpdateWindow(&state->Window);
+    v2 tAnchor = state->Window.Anchor;
 
-        if (GuiTextBox((Rectangle){tAnchor.x + 8, tAnchor.y + 32, 120, 24}, state->TilesetPathText,
-                       128, state->TilesetPathEditMode))
-            state->TilesetPathEditMode = !state->TilesetPathEditMode;
-        if (GuiValueBox((Rectangle){tAnchor.x + 192, tAnchor.y + 32, 32, 24}, "",
-                        &state->tileSizeXValue, 0, 100, state->tileSizeXEditMode))
-            state->tileSizeXEditMode = !state->tileSizeXEditMode;
-        if (GuiValueBox((Rectangle){tAnchor.x + 232, tAnchor.y + 32, 32, 24}, "",
-                        &state->tileSizeYValue, 0, 100, state->tileSizeYEditMode))
-            state->tileSizeYEditMode = !state->tileSizeYEditMode;
-        if (GuiTextBox((Rectangle){tAnchor.x + 8, tAnchor.y + 72, 120, 24}, state->PalettePathText,
-                       128, state->PalettePathEditMode))
-            state->PalettePathEditMode = !state->PalettePathEditMode;
-        if (GuiValueBox((Rectangle){tAnchor.x + 192, tAnchor.y + 72, 32, 24}, "",
-                        &state->mapSizeXValue, 0, 100, state->mapSizeXEditMode))
-            state->mapSizeXEditMode = !state->mapSizeXEditMode;
-        if (GuiValueBox((Rectangle){tAnchor.x + 232, tAnchor.y + 72, 32, 24}, "",
-                        &state->mapSizeYValue, 0, 100, state->mapSizeYEditMode))
-            state->mapSizeYEditMode = !state->mapSizeYEditMode;
-        GuiLabel((Rectangle){tAnchor.x + 136, tAnchor.y + 32, 48, 24}, tileSizeLabelText);
-        GuiLabel((Rectangle){tAnchor.x + 136, tAnchor.y + 72, 56, 24}, mapSizeLabelText);
+    if (GuiTextBox((Rectangle){tAnchor.x + 8, tAnchor.y + 32, 120, 24}, state->TilesetPathText, 128,
+                   state->TilesetPathEditMode))
+        state->TilesetPathEditMode = !state->TilesetPathEditMode;
+    if (GuiValueBox((Rectangle){tAnchor.x + 192, tAnchor.y + 32, 32, 24}, "",
+                    &state->tileSizeXValue, 0, 100, state->tileSizeXEditMode))
+        state->tileSizeXEditMode = !state->tileSizeXEditMode;
+    if (GuiValueBox((Rectangle){tAnchor.x + 232, tAnchor.y + 32, 32, 24}, "",
+                    &state->tileSizeYValue, 0, 100, state->tileSizeYEditMode))
+        state->tileSizeYEditMode = !state->tileSizeYEditMode;
+    if (GuiTextBox((Rectangle){tAnchor.x + 8, tAnchor.y + 72, 120, 24}, state->PalettePathText, 128,
+                   state->PalettePathEditMode))
+        state->PalettePathEditMode = !state->PalettePathEditMode;
+    if (GuiValueBox((Rectangle){tAnchor.x + 192, tAnchor.y + 72, 32, 24}, "", &state->mapSizeXValue,
+                    0, 100, state->mapSizeXEditMode))
+        state->mapSizeXEditMode = !state->mapSizeXEditMode;
+    if (GuiValueBox((Rectangle){tAnchor.x + 232, tAnchor.y + 72, 32, 24}, "", &state->mapSizeYValue,
+                    0, 100, state->mapSizeYEditMode))
+        state->mapSizeYEditMode = !state->mapSizeYEditMode;
+    GuiLabel((Rectangle){tAnchor.x + 136, tAnchor.y + 32, 48, 24}, tileSizeLabelText);
+    GuiLabel((Rectangle){tAnchor.x + 136, tAnchor.y + 72, 56, 24}, mapSizeLabelText);
 
-        bool newTilemap = GuiButton((Rectangle){tAnchor.x + 72, tAnchor.y + 112, 120, 24},
-                                    CreateTilemapButtonText);
+    bool newTilemap =
+        GuiButton((Rectangle){tAnchor.x + 72, tAnchor.y + 112, 120, 24}, CreateTilemapButtonText);
 
-        if (newTilemap) {
-            state->Window.Active   = false;
-            GlobalGuiState.Editing = false;
-        }
-        return newTilemap;
-    }
+    state->Window.Active   = !newTilemap;
+    GlobalGuiState.Editing = !newTilemap;
+    return newTilemap;
 }

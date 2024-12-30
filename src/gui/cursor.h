@@ -157,7 +157,7 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
 }
 
 void DrawBoxCursor(const Tilemap* map, const TilemapCursor* cursor) {
-    if (!cursor->State == CURSOR_STATE_BOXING && !cursor->State == CURSOR_STATE_BOXED) return;
+    if (!(cursor->State == CURSOR_STATE_BOXING) && !(cursor->State == CURSOR_STATE_BOXED)) return;
 
     DrawRectangleLines(
         cursor->Box[0].x * map->tileSize.x - map->tileSize.x * 0.5f + map->Window.Anchor.x,

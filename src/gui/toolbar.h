@@ -51,7 +51,6 @@ void UpdateToolbar(ToolbarState *state) {
 
 void DrawToolbar(ToolbarState *state, PopupNewState *newTilemapMenuState,
                  PopupLoadState *popupLoadState, Tilemap *tilemap, TilemapCursor *cursor) {
-    static const char *ToolbarWindowText = "Toolbar";
     static const char *NewButtonText     = "#08#New";
     static const char *LoadButtonText    = "#05#Load";
     static const char *PaintTileText     = "#23#";

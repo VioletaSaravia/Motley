@@ -43,7 +43,9 @@ void InitGameWindow(WindowOptions* opts) {
 
     InitWindow(opts->screenWidth, opts->screenHeight, opts->title);
     SetWindowState(opts->WindowFlags);
+#ifndef PLATFORM_WEB
     SetWindowIcon(LoadImage(opts->iconPath));
+#endif
 }
 
 void SetGameWindow(WindowOptions* opts) {}
@@ -243,7 +245,7 @@ GAME_API void SimpleCameraControls(Camera2D* cam, WindowOptions window) {
                      : IsActionPressed(ACTION_CAM_ZOOM_OUT) ? 0.5f
                                                             : 1.0f;
 
-    cam->offset = (v2){window.screenWidth / 2, window.screenHeight / 2};
+    cam->offset = (v2){GetScreenWidth() / 2, GetScreenHeight() / 2};
 }
 
 // ===== OS =====

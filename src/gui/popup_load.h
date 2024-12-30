@@ -30,7 +30,6 @@ PopupLoadState InitPopupLoad() {
 }
 
 bool DrawPopupLoad(PopupLoadState *state) {
-    static const char *LoadTilemapWindowText = "Load Tilemap";
     static const char *LoadButtonText        = "Load";
     static const char *TilemapPathLabelText  = "Path";
 
