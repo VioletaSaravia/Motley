@@ -66,13 +66,15 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && cursor->InMap) {
         i32 i = (coords.y * map->Size.x + coords.x) * cursor->InMap;
 
-        if (toolbar->PaintTileActive) map->Tile[i] = (v2){cursor->Selected.x, cursor->Selected.y};
-        if (toolbar->PaintFgActive) map->FG[i] = cursor->FG;
-        if (toolbar->PaintBgActive) map->BG[i] = cursor->BG;
-        if (toolbar->PaintRotActive) map->Rot[i] = cursor->Rot;
+        if (toolbar->PaintTileActive)
+            map->Layer[map->SelectedLayer].Tile[i] = (v2u){cursor->Selected.x, cursor->Selected.y};
+        if (toolbar->PaintFgActive) map->Layer[map->SelectedLayer].FG[i] = cursor->FG;
+        if (toolbar->PaintBgActive) map->Layer[map->SelectedLayer].BG[i] = cursor->BG;
+        if (toolbar->PaintRotActive) map->Layer[map->SelectedLayer].Rot[i] = cursor->Rot;
     }
 
     // ===== PALETTE BUTTONS =====
+    if (IsKeyPressed(KEY_FIVE)) map->SelectedLayer = map->SelectedLayer + 1 % MAX_LAYERS;
     if (IsActionPressed(ACTION_LEFT) && cursor->Selected.x != 0) cursor->Selected.x -= 1;
     if (IsActionPressed(ACTION_RIGHT) &&
         cursor->Selected.x < map->Tileset.width / map->tileSize.x - 1)
@@ -121,37 +123,40 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
     }
 
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_X) && cursor->State == CURSOR_STATE_BOXED) {
-        if (cursor->BoxSelection) free(cursor->BoxSelection);
-        cursor->BoxSelection = MALLOC_T(v2, abs(cursor->Box[1].y * cursor->Box[1].x) + 1);
+        // if (cursor->BoxSelection) free(cursor->BoxSelection);
+        // cursor->BoxSelection = MALLOC_T(v2, abs(cursor->Box[1].y * cursor->Box[1].x) + 1);
 
-        i32 neg_x = cursor->Box[1].x < cursor->Box[0].x ? -1 : 1;
-        i32 neg_y = cursor->Box[1].y < cursor->Box[0].y ? -1 : 1;
-        for (u32 y = 0; y < abs(cursor->Box[1].y); y++) {
-            for (u32 x = 0; x < abs(cursor->Box[1].x); x++) {
-                u32 i =
-                    (cursor->Box[0].y + y * neg_y) * map->Size.x + (cursor->Box[0].x + x * neg_x);
+        // i32 neg_x = cursor->Box[1].x < cursor->Box[0].x ? -1 : 1;
+        // i32 neg_y = cursor->Box[1].y < cursor->Box[0].y ? -1 : 1;
+        // for (u32 y = 0; y < abs(cursor->Box[1].y); y++) {
+        //     for (u32 x = 0; x < abs(cursor->Box[1].x); x++) {
+        //         u32 i =
+        //             (cursor->Box[0].y + y * neg_y) * map->Size.x + (cursor->Box[0].x + x *
+        //             neg_x);
 
-                cursor->BoxSelection[y * abs(cursor->Box[1].x) + x] = map->Tile[i];
+        //         cursor->BoxSelection[y * abs(cursor->Box[1].x) + x] =
+        //             (v2){map->Tile[i].x, map->Tile[i].y};
 
-                map->Tile[i] = (v2){};
-            }
-        }
+        //         map->Tile[i] = (v2u){};
+        //     }
+        // }
 
         cursor->State = CURSOR_STATE_SINGLE;
     }
 
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V) && cursor->BoxSelection &&
         cursor->State != CURSOR_STATE_BOXING) {
-        i32 neg_x = cursor->Box[1].x < cursor->Box[0].x ? -1 : 1;
-        i32 neg_y = cursor->Box[1].y < cursor->Box[0].y ? -1 : 1;
+        // i32 neg_x = cursor->Box[1].x < cursor->Box[0].x ? -1 : 1;
+        // i32 neg_y = cursor->Box[1].y < cursor->Box[0].y ? -1 : 1;
 
-        for (u32 y = 0; y < abs(cursor->Box[1].y); y++) {
-            for (u32 x = 0; x < abs(cursor->Box[1].x); x++) {
-                map->Tile[(coords.y + cursor->Box[0].y + y * neg_y) * map->Size.x +
-                          (coords.x + cursor->Box[0].x + x * neg_x)] =
-                    cursor->BoxSelection[y * abs(cursor->Box[1].x) + x];
-            }
-        }
+        // for (u32 y = 0; y < abs(cursor->Box[1].y); y++) {
+        //     for (u32 x = 0; x < abs(cursor->Box[1].x); x++) {
+        //         map->Tile[(coords.y + cursor->Box[0].y + y * neg_y) * map->Size.x +
+        //                   (coords.x + cursor->Box[0].x + x * neg_x)] =
+        //             (v2u){cursor->BoxSelection[y * abs(cursor->Box[1].x) + x].x,
+        //                   cursor->BoxSelection[y * abs(cursor->Box[1].x) + x].y};
+        //     }
+        // }
     }
 }
 

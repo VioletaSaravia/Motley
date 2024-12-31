@@ -41,7 +41,7 @@ void InitMotley() {
     Motley.toolbar = InitToolbar((v2){GetScreenWidth() * 0.025f, GetScreenHeight() * 0.05f});
     Motley.tileset =
         InitTilesetWindow((v2){window.screenWidth * 0.025f, window.screenHeight * 0.6f});
-    Motley.cursor = (TilemapCursor){.FG = 1, .BG = 0};
+    Motley.cursor = (TilemapCursor){.FG = 2, .BG = 0};
 
     Motley.tilemapArena = InitArena(250 << 10);
     Motley.undoArena    = InitArena(128 << 8);
