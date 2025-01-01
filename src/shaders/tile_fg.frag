@@ -1,5 +1,5 @@
 #version 300 es
-precision mediump float;
+precision highp float;
 
 in vec2 fragTexCoord;
 in vec4 fragColor; 
@@ -10,8 +10,6 @@ out vec4 finalColor;
 
 void main()
 {
-    //vec2 fragCoord = gl_FragCoord.xy / vec2(800, 450);
     if (texture(texture0, fragTexCoord).r == 0.0f) discard;
     finalColor = fragColor;
-    //finalColor = vec4(gl_FragCoord.xy / vec2(1280, 720), 0, 1);
 }

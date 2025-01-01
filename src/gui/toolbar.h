@@ -63,7 +63,7 @@ void DrawToolbar(ToolbarState *state, PopupNewState *newTilemapMenuState,
     UpdateWindow(&state->Window);
 
     if (tilemap->Window.Active) {
-        // FIXME: Overrides the first colors with white
+        // FIXME: Overrides startup colors with white
         // tilemap->Palette[cursor->FG] = state->ColorPickerFgValue;
         // tilemap->Palette[cursor->BG] = state->ColorPickerBgValue;
     }
@@ -94,16 +94,25 @@ void DrawToolbar(ToolbarState *state, PopupNewState *newTilemapMenuState,
 
     if (!tilemap->Window.Active) return;
 
-    u32 i = 1;
+    u32 i = 0;
     for (u32 y = 0; y < 4; y++) {
         for (u32 x = 0; x < 4; x++) {
             Rectangle r = {state->Window.Anchor.x + 8 + x * 32,
                            state->Window.Anchor.y + 104 + y * 32, 24, 24};
 
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+                CheckCollisionPointRec(GetMousePosition(), r) && i != cursor->BG)
+                cursor->FG = i;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) &&
+                CheckCollisionPointRec(GetMousePosition(), r) && i != cursor->FG)
+                cursor->BG = i;
+
             DrawRectangleRec(r, tilemap->Palette[i]);
 
-            if (cursor->FG == i) DrawRectangleLines(r.x, r.y, r.width, r.height, GREEN);
-            if (cursor->BG == i) DrawRectangleLines(r.x, r.y, r.width, r.height, YELLOW);
+            if (cursor->FG == i)
+                DrawRectangleLinesEx((Rectangle){r.x, r.y, r.width, r.height}, 3, GREEN);
+            if (cursor->BG == i)
+                DrawRectangleLinesEx((Rectangle){r.x, r.y, r.width, r.height}, 3, YELLOW);
 
             if (i++ >= tilemap->PaletteSize) goto END;
         }
@@ -118,16 +127,18 @@ typedef struct {
 
 TilesetState InitTilesetWindow(v2 pos) {
     return (TilesetState){
-        .Scale = 1.0f, .Window = {.Active = true, .Anchor = pos, .Title = "Tileset", .Size = {}}};
+        .Scale = 0.5f, .Window = {.Active = true, .Anchor = pos, .Title = "Tileset", .Size = {}}};
 }
 
 void UpdateTileset(TilesetState *state, const Tilemap *map) {
     if (!state->Window.Active || !map->Window.Active) return;
 
-    state->Scale = map->tileSize.x == 24 ? 0.5f : 1.0f;
+    // 24 = mrmo-x3 size
+    state->Scale = map->tileSize.x >= 24 ? 0.5f : 1.0f;
 
     state->Window.Size =
-        (v2){map->Tileset.width * state->Scale, map->Tileset.height * state->Scale + 24};
+        (v2){map->Tileset.width * state->Scale,
+             map->Tileset.height * state->Scale + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT};
 }
 
 void DrawTileset(TilesetState *state, const Tilemap *map, TilemapCursor *cursor,
@@ -136,7 +147,7 @@ void DrawTileset(TilesetState *state, const Tilemap *map, TilemapCursor *cursor,
 
     UpdateWindow(&state->Window);
 
-    v2 tAnchor = Vector2Add(state->Window.Anchor, (v2){0, 24});
+    v2 tAnchor = Vector2Add(state->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT});
 
     BeginShaderMode(shaders[0]);
     DrawTextureEx(map->Tileset, tAnchor, 0.0f, state->Scale, map->Palette[cursor->FG]);
@@ -146,22 +157,25 @@ void DrawTileset(TilesetState *state, const Tilemap *map, TilemapCursor *cursor,
     DrawTextureEx(map->Tileset, tAnchor, 0.0f, state->Scale, map->Palette[cursor->BG]);
     EndShaderMode();
 
-    v2i scaledTile = (v2i){map->tileSize.x * state->Scale, map->tileSize.y * state->Scale};
+    // TILE SELECTION BOXES
+    v2u scaledTile = (v2u){map->tileSize.x * state->Scale, map->tileSize.y * state->Scale};
 
-    DrawRectangleLines((i32)(cursor->Selected.x * scaledTile.x) + tAnchor.x,
-                       (i32)(cursor->Selected.y * scaledTile.y) + tAnchor.y, scaledTile.x,
+    DrawRectangleLines((u32)(cursor->Selected.x * scaledTile.x) + tAnchor.x + 1,
+                       (u32)(cursor->Selected.y * scaledTile.y) + tAnchor.y + 1, scaledTile.x,
                        scaledTile.y, GREEN);
 
     if (CheckCollisionPointRec(GetMousePosition(),
                                (Rectangle){tAnchor.x, tAnchor.y, map->Tileset.width * state->Scale,
                                            map->Tileset.height * state->Scale})) {
-        v2 cur = {GetMouseX() - tAnchor.x - GetMouseX() % scaledTile.x,
-                  GetMouseY() - tAnchor.y - GetMouseY() % scaledTile.y};
+        v2u hoveredTile = {(GetMouseX() - tAnchor.x) / scaledTile.x,
+                           (GetMouseY() - tAnchor.y) / scaledTile.y};
 
-        DrawRectangleLines(cur.x + tAnchor.x, cur.y + tAnchor.y, scaledTile.x, scaledTile.y, BLUE);
+        DrawRectangleLines(hoveredTile.x * scaledTile.x + tAnchor.x + 1,
+                           hoveredTile.y * scaledTile.y + tAnchor.y + 1, scaledTile.x, scaledTile.y,
+                           BLUE);
 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            cursor->Selected = (v2i){cur.x / scaledTile.x, cur.y / scaledTile.y};
+            cursor->Selected = (v2i){hoveredTile.x, hoveredTile.y};
         }
     }
 }

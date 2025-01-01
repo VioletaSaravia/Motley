@@ -30,14 +30,10 @@ typedef struct {
 
     TilemapLayer Layer[MAX_LAYERS];
     u8           SelectedLayer;
-    // v2u* Tile;
-    // u8*  FG;
-    // u8*  BG;
-    // u8*  Rot;
 
     Texture     Tileset;
     const char* TilesetPath;
-    Color*      Palette;
+    Color*      Palette;  // 0 = BLANK, 1 = WHITE, 2 = BLACK, 3+ = COLORS
     u32         PaletteSize;
 } Tilemap;
 
@@ -71,7 +67,7 @@ typedef struct {
 
     CursorState State;
 
-    v2i Box[2];
+    v2u Box[2];
     v2* BoxSelection;
 
 } TilemapCursor;
@@ -105,10 +101,10 @@ Color* LoadPaletteFromHex(const char* path, /* out var */ u32* size) {
                 return MALLOC_T(Color, 2);
             }
 
-            palette[i].r = (rgb >> 16) & 0xFF;  // Red
-            palette[i].g = (rgb >> 8) & 0xFF;   // Green
-            palette[i].b = rgb & 0xFF;          // Blue
-            palette[i].a = 0xFF;                // Alpha
+            palette[i].r = (rgb >> 16) & 0xFF;
+            palette[i].g = (rgb >> 8) & 0xFF;
+            palette[i].b = rgb & 0xFF;
+            palette[i].a = 0xFF;
         }
 
         TraceLog(LOG_INFO, "Palette loaded successfully");
@@ -147,7 +143,7 @@ Tilemap InitTilemap(const PopupNewState* state, Arena* arena) {
         for (u32 y = 0; y < map.Size.y; y++) {
             u32 coord                = y * map.Size.x + x;
             map.Layer[0].FG[coord]   = 0;
-            map.Layer[0].BG[coord]   = 1;
+            map.Layer[0].BG[coord]   = 0;
             map.Layer[0].Tile[coord] = (v2u){};
             map.Layer[0].Rot[coord]  = ROT_UP;
             map.Layer[1].FG[coord]   = 0;
@@ -156,65 +152,65 @@ Tilemap InitTilemap(const PopupNewState* state, Arena* arena) {
             map.Layer[1].Rot[coord]  = ROT_UP;
         }
     }
-
     return map;
 }
 
+// TODO: Doesn't save layers other than the first one.
 bool SaveTilemap(Tilemap* this, const char* path) {
-    // if (GlobalGuiState.Editing) return false;
-    // if (!this->Window.Active || !IsKeyDown(KEY_LEFT_CONTROL) || !IsKeyPressed(KEY_S)) return
-    // false;
+    if (GlobalGuiState.Editing) return false;
+    if (!this->Window.Active || !IsKeyDown(KEY_LEFT_CONTROL) || !IsKeyPressed(KEY_S)) return false;
 
-    // FILE* file = fopen(path, "w");
-    // if (file == NULL) {
-    //     TraceLog(LOG_ERROR, "Couldn't save tilemap to file");
-    //     return false;
-    // }
+    FILE* file = fopen(path, "w");
+    if (file == NULL) {
+        TraceLog(LOG_ERROR, "Couldn't save tilemap to file");
+        return false;
+    }
 
-    // fprintf(file, "%d %d\n", this->Size.x, this->Size.y);
+    fprintf(file, "%d %d\n", this->Size.x, this->Size.y);
 
-    // fprintf(file, "%d %d\n", this->tileSize.x, this->tileSize.y);
+    fprintf(file, "%d %d\n", this->tileSize.x, this->tileSize.y);
 
-    // for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
-    //     fprintf(file, "%.2f %.2f ", this->Tile[i].x, this->Tile[i].y);
-    // }
-    // fprintf(file, "\n");
+    for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
+        fprintf(file, "%.2f %.2f ", this->Layer[0].Tile[i].x, this->Layer[0].Tile[i].y);
+    }
+    fprintf(file, "\n");
 
-    // for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
-    //     fprintf(file, "%d ", this->FG[i]);
-    // }
-    // fprintf(file, "\n");
+    for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
+        fprintf(file, "%d ", this->Layer[0].FG[i]);
+    }
+    fprintf(file, "\n");
 
-    // for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
-    //     fprintf(file, "%d ", this->BG[i]);
-    // }
-    // fprintf(file, "\n");
+    for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
+        fprintf(file, "%d ", this->Layer[0].BG[i]);
+    }
+    fprintf(file, "\n");
 
-    // for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
-    //     fprintf(file, "%d ", this->Rot[i]);
-    // }
-    // fprintf(file, "\n");
+    for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
+        fprintf(file, "%d ", this->Layer[0].Rot[i]);
+    }
+    fprintf(file, "\n");
 
-    // fprintf(file, this->TilesetPath);
-    // fprintf(file, "\n");
+    fprintf(file, this->TilesetPath);
+    fprintf(file, "\n");
 
-    // fprintf(file, "%u\n", this->PaletteSize);
+    fprintf(file, "%u\n", this->PaletteSize);
 
-    // for (u32 i = 0; i < this->PaletteSize; i++) {
-    //     fprintf(file, "%d %d %d %d ", this->Palette[i].r, this->Palette[i].g, this->Palette[i].b,
-    //             this->Palette[i].a);
-    // }
-    // fprintf(file, "\n");
+    for (u32 i = 0; i < this->PaletteSize; i++) {
+        fprintf(file, "%d %d %d %d ", this->Palette[i].r, this->Palette[i].g, this->Palette[i].b,
+                this->Palette[i].a);
+    }
+    fprintf(file, "\n");
 
-    // fclose(file);
+    fclose(file);
 
-    // TraceLog(LOG_INFO, "Tilemap saved successfully");
+    TraceLog(LOG_INFO, "Tilemap saved successfully");
 
-    // this->Window.Title = path;
+    this->Window.Title = path;
     return true;
 }
 
-Tilemap InitTilemapFromFile(PopupLoadState* state, Arena* arena) {
+// TODO: Doesn't load layers other than the first one.
+Tilemap LoadTilemap(PopupLoadState* state, Arena* arena) {
     FILE* file = fopen(state->TilemapPathTextBoxText, "r");
     if (file == NULL) {
         TraceLog(LOG_ERROR, "Couldn't open tilemap file");
@@ -223,67 +219,56 @@ Tilemap InitTilemapFromFile(PopupLoadState* state, Arena* arena) {
 
     Tilemap this = {};
 
-    // fscanf(file, "%d %d", &this.Size.x, &this.Size.y);
+    fscanf(file, "%d %d", &this.Size.x, &this.Size.y);
 
-    // fscanf(file, "%d %d", &this.tileSize.x, &this.tileSize.y);
+    fscanf(file, "%d %d", &this.tileSize.x, &this.tileSize.y);
 
-    // u32 tileCount = this.Size.x * this.Size.y;
-    // this.Tile     = AALLOC(arena, v2u, tileCount);
-    // this.FG       = AALLOC(arena, u8, tileCount);
-    // this.BG       = AALLOC(arena, u8, tileCount);
-    // this.Rot      = AALLOC(arena, u8, tileCount);
+    u32 tileCount      = this.Size.x * this.Size.y;
+    this.Layer[0].Tile = AALLOC(arena, v2u, tileCount);
+    this.Layer[0].FG   = AALLOC(arena, u8, tileCount);
+    this.Layer[0].BG   = AALLOC(arena, u8, tileCount);
+    this.Layer[0].Rot  = AALLOC(arena, u8, tileCount);
 
-    // for (u32 i = 0; i < tileCount; i++) {
-    //     fscanf(file, "%f %f", &this.Tile[i].x, &this.Tile[i].y);
-    // }
+    for (u32 i = 0; i < tileCount; i++) {
+        fscanf(file, "%f %f", &this.Layer[0].Tile[i].x, &this.Layer[0].Tile[i].y);
+    }
 
-    // for (u32 i = 0; i < tileCount; i++) {
-    //     fscanf(file, "%hhu", &this.FG[i]);
-    // }
+    for (u32 i = 0; i < tileCount; i++) {
+        fscanf(file, "%hhu", &this.Layer[0].FG[i]);
+    }
 
-    // for (u32 i = 0; i < tileCount; i++) {
-    //     fscanf(file, "%hhu", &this.BG[i]);
-    // }
+    for (u32 i = 0; i < tileCount; i++) {
+        fscanf(file, "%hhu", &this.Layer[0].BG[i]);
+    }
 
-    // for (u32 i = 0; i < tileCount; i++) {
-    //     fscanf(file, "%hhu", &this.Rot[i]);
-    // }
+    for (u32 i = 0; i < tileCount; i++) {
+        fscanf(file, "%hhu", &this.Layer[0].Rot[i]);
+    }
 
-    // char tilesetPath[256];
-    // fscanf(file, "%255s", tilesetPath);
-    // this.TilesetPath = strdup(tilesetPath);
-    // this.Tileset     = LoadTexture(this.TilesetPath);
+    char tilesetPath[256];
+    fscanf(file, "%255s", tilesetPath);
+    this.TilesetPath = strdup(tilesetPath);
+    this.Tileset     = LoadTexture(this.TilesetPath);
 
-    // fscanf(file, "%u", &this.PaletteSize);
-    // this.Palette = AALLOC(arena, Color, this.PaletteSize);
-    // for (u32 i = 0; i < this.PaletteSize; i++) {
-    //     fscanf(file, "%hhu %hhu %hhu %hhu", &this.Palette[i].r, &this.Palette[i].g,
-    //            &this.Palette[i].b, &this.Palette[i].a);
-    // }
+    fscanf(file, "%u", &this.PaletteSize);
+    this.Palette = AALLOC(arena, Color, this.PaletteSize);
+    for (u32 i = 0; i < this.PaletteSize; i++) {
+        fscanf(file, "%hhu %hhu %hhu %hhu", &this.Palette[i].r, &this.Palette[i].g,
+               &this.Palette[i].b, &this.Palette[i].a);
+    }
 
-    // fclose(file);
+    fclose(file);
 
-    // this.Window = InitWindowBox(state->TilemapPathTextBoxText,
-    //                             (v2){this.Size.x * this.tileSize.x, this.Size.y *
-    //                             this.tileSize.y});
+    this.Window = InitWindowBox(state->TilemapPathTextBoxText,
+                                (v2){this.Size.x * this.tileSize.x, this.Size.y * this.tileSize.y});
 
-    // TraceLog(LOG_INFO, "Tilemap loaded successfully");
+    TraceLog(LOG_INFO, "Tilemap loaded successfully");
     return this;
 }
 
-// static Shader FgTilemap;
-// static Shader FgCursor;
-// static Shader BgTilemap;
-// static Shader BgCursor;
-// static Shader wallpaperColor;
-
-// void InitTilemapShaders() {
-
-// }
-
 void DrawBg(Texture bg, Shader shader) {
     BeginShaderMode(shader);
-    // TODO: Texture wrap doesn't work?
+    // FIXME: Texture wrap doesn't work?
     DrawTexture(bg, 0, 0, WHITE);
     DrawTexture(bg, bg.width, 0, WHITE);
     DrawTexture(bg, 0, bg.height, WHITE);

@@ -11,44 +11,67 @@
 #include "tilemap.h"
 #include "toolbar.h"
 
-void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const ToolbarState* toolbar) {
-    // if (!cursor->InMap || cursor->State == CURSOR_STATE_BOXING || !map->Window.Active) return;
+void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const ToolbarState* toolbar,
+                    Shader shaders[2]) {
     SetMouseCursor(cursor->InMap && cursor->State != CURSOR_STATE_BOXING ? MOUSE_CURSOR_CROSSHAIR
                                                                          : MOUSE_CURSOR_DEFAULT);
-
-    v2 halfTile = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
-    v2 mousePos = GetMousePosition();
+    if (!cursor->InMap || cursor->State == CURSOR_STATE_BOXING || !map->Window.Active) return;
 
     v2  selected = toolbar->PaintTileActive ? (v2){map->tileSize.x * cursor->Selected.x,
                                                    map->tileSize.y * cursor->Selected.y}
                                             : (v2){};
     f32 rotation = toolbar->PaintRotActive ? cursor->Rot * 90.0f : 0.0f;
 
-    // TODO: I Hate this.
+    v2  tAnchor     = Vector2Add(map->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT});
+    v2u hoveredTile = (v2u){(GetMouseX() - tAnchor.x) / map->tileSize.x,
+                            (GetMouseY() - tAnchor.y) / map->tileSize.y};
+    v2  halfTile    = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
 
-    // v2 coords = {mousePos.x + halfTile.x - fmodf(mousePos.x, map->tileSize.x) +
-    //                  fmodf(map->Window.Anchor.x, map->tileSize.x),
-    //              mousePos.y + halfTile.y - fmodf(mousePos.y, map->tileSize.y) +
-    //                  fmodf(map->Window.Anchor.y, map->tileSize.y)};
-    //
-    // if (toolbar->PaintFgActive) {
-    //     BeginShaderMode(FgCursor);
-    //     DrawTexturePro(map->Tileset,
-    //                    (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
-    //                    (Rectangle){coords.x, coords.y, map->tileSize.x, map->tileSize.y},
-    //                    halfTile, rotation, map->Palette[cursor->FG]);
-    //     EndShaderMode();
-    // }
-    //
-    // if (toolbar->PaintBgActive) {
-    //     BeginShaderMode(BgCursor);
-    //     DrawTexturePro(map->Tileset,
-    //                    (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
-    //                    (Rectangle){coords.x, coords.y, map->tileSize.x, map->tileSize.y},
-    //                    halfTile, rotation, map->Palette[cursor->BG]);
-    //     EndShaderMode();
-    // }
+    if (toolbar->PaintFgActive) {
+        BeginShaderMode(shaders[0]);
+        DrawTexturePro(map->Tileset,
+                       (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
+                       (Rectangle){hoveredTile.x * map->tileSize.x + tAnchor.x + halfTile.x,
+                                   hoveredTile.y * map->tileSize.y + tAnchor.y + halfTile.y,
+                                   map->tileSize.x, map->tileSize.y},
+                       halfTile, rotation, map->Palette[cursor->FG]);
+        EndShaderMode();
+    }
+
+    if (toolbar->PaintBgActive) {
+        BeginShaderMode(shaders[1]);
+        DrawTexturePro(map->Tileset,
+                       (Rectangle){selected.x, selected.y, map->tileSize.x, map->tileSize.y},
+                       (Rectangle){hoveredTile.x * map->tileSize.x + tAnchor.x + halfTile.x,
+                                   hoveredTile.y * map->tileSize.y + tAnchor.y + halfTile.y,
+                                   map->tileSize.x, map->tileSize.y},
+                       halfTile, rotation, map->Palette[cursor->BG]);
+        EndShaderMode();
+    }
 }
+
+void CopyBoxedTiles(const Tilemap* map, const TilemapCursor* cursor) {}
+
+void DeleteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
+    v2u from = {cursor->Box[0].x < cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
+                cursor->Box[0].y < cursor->Box[1].y ? cursor->Box[0].y : cursor->Box[1].y};
+    v2u to = {cursor->Box[0].x >= cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
+              cursor->Box[0].y >= cursor->Box[1].y ? cursor->Box[0].y : cursor->Box[1].y};
+
+    for (u32 i = 0; i < MAX_LAYERS; i++) {
+        for (u32 x = from.x; x < to.x; x++) {
+            for (u32 y = from.y; y < to.y; y++) {
+                u32 coord                 = y * map->Size.x + x;
+                map->Layer[i].FG[coord]   = 0;
+                map->Layer[i].BG[coord]   = 0;
+                map->Layer[i].Tile[coord] = (v2u){};
+                map->Layer[i].Rot[coord]  = ROT_UP;
+            }
+        }
+    }
+}
+
+void PasteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {}
 
 void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar) {
     if (!map->Window.Active || GlobalGuiState.Editing || GlobalGuiState.Moving) return;
@@ -60,7 +83,8 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
         mousePos, (Rectangle){map->Window.Anchor.x, map->Window.Anchor.y + 24,
                               map->Size.x * map->tileSize.x, map->Size.y * map->tileSize.y});
 
-    v2  absPos = Vector2Subtract(mousePos, Vector2Add(map->Window.Anchor, (v2){0, 24}));
+    v2 absPos = Vector2Subtract(
+        mousePos, Vector2Add(map->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT}));
     v2i coords = {absPos.x / map->tileSize.x, absPos.y / map->tileSize.y};
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && cursor->InMap) {
@@ -100,18 +124,22 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
         cursor->FG = cursor->BG;
         cursor->BG = swap;
     }
-    return;
+}
 
-    // ===== BOX SELECT =====
+void UpdateBoxSelect(Tilemap* mapFrom, Tilemap* mapTo, TilemapCursor* cursor) {
     if (!cursor->InMap) return;
+
+    v2  tAnchor = Vector2Add(mapFrom->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT});
+    v2u hoveredTile = (v2u){(GetMouseX() - tAnchor.x) / mapFrom->tileSize.x,
+                            (GetMouseY() - tAnchor.y) / mapFrom->tileSize.y};
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
         cursor->State  = CURSOR_STATE_BOXING;
-        cursor->Box[0] = coords;
+        cursor->Box[0] = hoveredTile;
     }
 
     if (cursor->State == CURSOR_STATE_BOXING) {
-        cursor->Box[1] = (v2i){coords.x - cursor->Box[0].x, coords.y - cursor->Box[0].y};
+        cursor->Box[1] = (v2u){hoveredTile.x + 1, hoveredTile.y + 1};
     }
 
     if (cursor->State == CURSOR_STATE_BOXING && IsMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
@@ -122,49 +150,37 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
         cursor->State = CURSOR_STATE_SINGLE;
     }
 
-    if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_X) && cursor->State == CURSOR_STATE_BOXED) {
-        // if (cursor->BoxSelection) free(cursor->BoxSelection);
-        // cursor->BoxSelection = MALLOC_T(v2, abs(cursor->Box[1].y * cursor->Box[1].x) + 1);
-
-        // i32 neg_x = cursor->Box[1].x < cursor->Box[0].x ? -1 : 1;
-        // i32 neg_y = cursor->Box[1].y < cursor->Box[0].y ? -1 : 1;
-        // for (u32 y = 0; y < abs(cursor->Box[1].y); y++) {
-        //     for (u32 x = 0; x < abs(cursor->Box[1].x); x++) {
-        //         u32 i =
-        //             (cursor->Box[0].y + y * neg_y) * map->Size.x + (cursor->Box[0].x + x *
-        //             neg_x);
-
-        //         cursor->BoxSelection[y * abs(cursor->Box[1].x) + x] =
-        //             (v2){map->Tile[i].x, map->Tile[i].y};
-
-        //         map->Tile[i] = (v2u){};
-        //     }
-        // }
-
+    if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_C) && cursor->State == CURSOR_STATE_BOXED) {
         cursor->State = CURSOR_STATE_SINGLE;
+
+        CopyBoxedTiles(mapFrom, cursor);
+    }
+
+    if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_X) && cursor->State == CURSOR_STATE_BOXED) {
+        cursor->State = CURSOR_STATE_SINGLE;
+
+        CopyBoxedTiles(mapFrom, cursor);
+        DeleteBoxedTiles(mapFrom, cursor);
     }
 
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V) && cursor->BoxSelection &&
         cursor->State != CURSOR_STATE_BOXING) {
-        // i32 neg_x = cursor->Box[1].x < cursor->Box[0].x ? -1 : 1;
-        // i32 neg_y = cursor->Box[1].y < cursor->Box[0].y ? -1 : 1;
-
-        // for (u32 y = 0; y < abs(cursor->Box[1].y); y++) {
-        //     for (u32 x = 0; x < abs(cursor->Box[1].x); x++) {
-        //         map->Tile[(coords.y + cursor->Box[0].y + y * neg_y) * map->Size.x +
-        //                   (coords.x + cursor->Box[0].x + x * neg_x)] =
-        //             (v2u){cursor->BoxSelection[y * abs(cursor->Box[1].x) + x].x,
-        //                   cursor->BoxSelection[y * abs(cursor->Box[1].x) + x].y};
-        //     }
-        // }
+        PasteBoxedTiles(mapTo, cursor);
     }
 }
 
 void DrawBoxCursor(const Tilemap* map, const TilemapCursor* cursor) {
-    if (!(cursor->State == CURSOR_STATE_BOXING) && !(cursor->State == CURSOR_STATE_BOXED)) return;
+    if (cursor->State == CURSOR_STATE_SINGLE) return;
 
-    DrawRectangleLines(
-        cursor->Box[0].x * map->tileSize.x - map->tileSize.x * 0.5f + map->Window.Anchor.x,
-        cursor->Box[0].y * map->tileSize.y - map->tileSize.y * 0.5f + map->Window.Anchor.y,
-        cursor->Box[1].x * map->tileSize.x, cursor->Box[1].y * map->tileSize.y, GRAY);
+    v2  tAnchor = Vector2Add(map->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT});
+    v2u start   = {cursor->Box[0].x * map->tileSize.x + tAnchor.x,
+                   cursor->Box[0].y * map->tileSize.y + tAnchor.y};
+    v2u end     = {cursor->Box[1].x * map->tileSize.x + tAnchor.x,
+                   cursor->Box[1].y * map->tileSize.y + tAnchor.y};
+
+    DrawRectangleLinesEx(
+        (Rectangle){start.x < end.x ? start.x : end.x, start.y < end.y ? start.y : end.y,
+                    start.x < end.x ? end.x - start.x : start.x - end.x,
+                    start.y < end.y ? end.y - start.y : start.y - end.y},
+        2, GRAY);
 }

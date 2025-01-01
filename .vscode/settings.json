@@ -31,6 +31,8 @@
         "string": "c",
         "unordered_map": "c",
         "unordered_set": "c",
-        "vector": "c"
-    }
+        "vector": "c",
+        "cursor.h": "c"
+    },
+    "makefile.configureOnOpen": true
 }
