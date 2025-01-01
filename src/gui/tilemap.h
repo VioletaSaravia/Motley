@@ -302,7 +302,6 @@ void DrawTilemap(Tilemap* map, Shader shaders[2]) {
     EndShaderMode();
 
     BeginShaderMode(shaders[0]);
-    // TODO Should be a single draw.
     for (u8 i = 0; i < MAX_LAYERS; i++)
         for (u32 x = 0; x < map->Size.x; x++) {
             for (u32 y = 0; y < map->Size.y; y++) {

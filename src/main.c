@@ -45,7 +45,7 @@ typedef struct {
     Tilemap tilemap[MAX_TILEMAPS];
     u8      tilemapCount;
 
-    Arena undoArena;  // TODO: Undo
+    Arena undoArena;
 
     Texture bg;
     Shader  shaders[5];
