@@ -271,29 +271,18 @@ Tilemap InitTilemapFromFile(PopupLoadState* state, Arena* arena) {
     return this;
 }
 
-static Shader FgTilemap;
-static Shader FgCursor;
-static Shader BgTilemap;
-static Shader BgCursor;
-static Shader wallpaperColor;
+// static Shader FgTilemap;
+// static Shader FgCursor;
+// static Shader BgTilemap;
+// static Shader BgCursor;
+// static Shader wallpaperColor;
 
-void InitTilemapShaders() {
-    FgTilemap = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_fg.frag");
-    FgCursor  = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_fg_cursor.frag");
-    BgTilemap = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_bg.frag");
-    BgCursor  = LoadShader("src/shaders/tiles.vert", "src/shaders/tile_bg_cursor.frag");
+// void InitTilemapShaders() {
 
-    wallpaperColor = LoadShader("src/shaders/tiles.vert", "src/shaders/wallpaper.frag");
-    v3 col1        = {0.34, 0.34, 0.34};
-    v3 col2        = {0.55, 0.55, 0.55};
-    SetShaderValue(wallpaperColor, GetShaderLocation(wallpaperColor, "color1"), &col1,
-                   SHADER_UNIFORM_VEC3);
-    SetShaderValue(wallpaperColor, GetShaderLocation(wallpaperColor, "color2"), &col2,
-                   SHADER_UNIFORM_VEC3);
-}
+// }
 
-void DrawBg(Texture bg) {
-    BeginShaderMode(wallpaperColor);
+void DrawBg(Texture bg, Shader shader) {
+    BeginShaderMode(shader);
     // TODO: Texture wrap doesn't work?
     DrawTexture(bg, 0, 0, WHITE);
     DrawTexture(bg, bg.width, 0, WHITE);
@@ -302,7 +291,7 @@ void DrawBg(Texture bg) {
     EndShaderMode();
 }
 
-void DrawTilemap(Tilemap* map) {
+void DrawTilemap(Tilemap* map, Shader shaders[2]) {
     if (!map->Window.Active) return;
 
     UpdateWindow(&map->Window);
@@ -310,7 +299,7 @@ void DrawTilemap(Tilemap* map) {
     v2 tAnchor = {map->Window.Anchor.x + map->tileSize.x * 0.5f,
                   map->Window.Anchor.y + map->tileSize.y * 0.5f + 24};
 
-    BeginShaderMode(BgTilemap);
+    BeginShaderMode(shaders[1]);
     for (u32 x = 0; x < map->Size.x; x++) {
         for (u32 y = 0; y < map->Size.y; y++) {
             u32 coord = y * map->Size.x + x;
@@ -327,7 +316,7 @@ void DrawTilemap(Tilemap* map) {
     }
     EndShaderMode();
 
-    BeginShaderMode(FgTilemap);
+    BeginShaderMode(shaders[0]);
     // TODO Should be a single draw.
     for (u8 i = 0; i < MAX_LAYERS; i++)
         for (u32 x = 0; x < map->Size.x; x++) {

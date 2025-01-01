@@ -14,7 +14,7 @@ static WindowOptions window = {.screenWidth  = 1024,
                                .iconPath     = "",
                                .guiStylePath = ""};
 
-static struct {
+typedef struct {
     ToolbarState  toolbar;
     TilesetState  tileset;
     TilemapCursor cursor;
@@ -29,73 +29,75 @@ static struct {
     Arena undoArena;  // TODO: Undo
 
     Texture bg;
-} Motley = {};
-
-void InitMotley() {
-    InitTilemapShaders();
-    Motley.bg = LoadTexture("assets/bg.png");
-
-    Motley.popupNew  = InitNewTilemapMenu();
-    Motley.popupLoad = InitPopupLoad();
-
-    Motley.toolbar = InitToolbar((v2){GetScreenWidth() * 0.025f, GetScreenHeight() * 0.05f});
-    Motley.tileset =
-        InitTilesetWindow((v2){window.screenWidth * 0.025f, window.screenHeight * 0.6f});
-    Motley.cursor = (TilemapCursor){.FG = 2, .BG = 0};
-
-    Motley.tilemapArena = InitArena(250 << 10);
-    Motley.undoArena    = InitArena(128 << 8);
-}
-
-void UpdateMotley() {
-    for (u32 i = 0; i <= Motley.tilemapCount; i++)
-        UpdateTileCursor(&Motley.tilemap[i], &Motley.cursor, &Motley.toolbar);
-    UpdateToolbar(&Motley.toolbar);
-    UpdateTileset(&Motley.tileset, Motley.tilemap);
-    SaveTilemap(Motley.tilemap, "tilemap.txt");  // TODO: Save popup
-}
-
-void CloseMotley() {
-    free(Motley.tilemapArena.buffer);
-    free(Motley.undoArena.buffer);
-}
-
-void DrawMotley() {
-    DrawBg(Motley.bg);
-
-    for (u32 i = 0; i <= Motley.tilemapCount; i++) {
-        DrawTilemap(&Motley.tilemap[i]);
-        DrawTileCursor(&Motley.tilemap[i], &Motley.cursor, &Motley.toolbar);
-        DrawBoxCursor(&Motley.tilemap[i], &Motley.cursor);
-    }
-
-    DrawToolbar(&Motley.toolbar, &Motley.popupNew, &Motley.popupLoad, Motley.tilemap,
-                &Motley.cursor);
-    DrawTileset(&Motley.tileset, Motley.tilemap, &Motley.cursor);
-
-    if (DrawNewTilemapMenu(&Motley.popupNew)) {
-        Motley.tilemap[Motley.tilemapCount++] = InitTilemap(&Motley.popupNew, &Motley.tilemapArena);
-    }
-    if (DrawPopupLoad(&Motley.popupLoad)) {
-        Motley.tilemap[Motley.tilemapCount++] =
-            InitTilemapFromFile(&Motley.popupLoad, &Motley.tilemapArena);
-    }
-}
+    Shader  shaders[5];
+} Motley;
 
 i32 main() {
     InitGameWindow(&window);
-    InitMotley();
+
+    // === INIT MOTLEY ===
+    Motley Motley = {
+        .toolbar = InitToolbar((v2){GetScreenWidth() * 0.025f, GetScreenHeight() * 0.05f}),
+        .tileset = InitTilesetWindow((v2){window.screenWidth * 0.025f, window.screenHeight * 0.6f}),
+        .cursor  = (TilemapCursor){.FG = 2, .BG = 0},
+        .popupNew     = InitNewTilemapMenu(),
+        .popupLoad    = InitPopupLoad(),
+        .tilemapArena = InitArena(250 << 10),
+        .undoArena    = InitArena(128 << 8),
+        .bg           = LoadTexture("assets/bg.png"),
+        .shaders      = {
+            LoadShader("src/shaders/tiles.vert", "src/shaders/tile_fg.frag"),
+            LoadShader("src/shaders/tiles.vert", "src/shaders/tile_fg_cursor.frag"),
+            LoadShader("src/shaders/tiles.vert", "src/shaders/tile_bg.frag"),
+            LoadShader("src/shaders/tiles.vert", "src/shaders/tile_bg_cursor.frag"),
+            LoadShader("src/shaders/tiles.vert", "src/shaders/wallpaper.frag"),
+        }};
+    v3 col1 = {0.34, 0.34, 0.34};
+    v3 col2 = {0.55, 0.55, 0.55};
+    SetShaderValue(Motley.shaders[4], GetShaderLocation(Motley.shaders[4], "color1"), &col1,
+                   SHADER_UNIFORM_VEC3);
+    SetShaderValue(Motley.shaders[4], GetShaderLocation(Motley.shaders[4], "color2"), &col2,
+                   SHADER_UNIFORM_VEC3);
 
     while (!WindowShouldClose()) {
         GameWindowControls(&window);
 
-        UpdateMotley();
+        // === UPDATE MOTLEY ===
+        for (u32 i = 0; i <= Motley.tilemapCount; i++)
+            UpdateTileCursor(&Motley.tilemap[i], &Motley.cursor, &Motley.toolbar);
+        UpdateToolbar(&Motley.toolbar);
+        UpdateTileset(&Motley.tileset, Motley.tilemap);
+        SaveTilemap(Motley.tilemap, "tilemap.txt");  // TODO: Save popup
 
         BeginDrawing();
-        { DrawMotley(); }
+
+        // === DRAW MOTLEY ===
+        DrawBg(Motley.bg, Motley.shaders[4]);
+
+        for (u32 i = 0; i <= Motley.tilemapCount; i++) {
+            DrawTilemap(&Motley.tilemap[i], (Shader[2]){Motley.shaders[0], Motley.shaders[1]});
+            DrawTileCursor(&Motley.tilemap[i], &Motley.cursor, &Motley.toolbar);
+            DrawBoxCursor(&Motley.tilemap[i], &Motley.cursor);
+        }
+
+        DrawToolbar(&Motley.toolbar, &Motley.popupNew, &Motley.popupLoad, Motley.tilemap,
+                    &Motley.cursor);
+        DrawTileset(&Motley.tileset, Motley.tilemap, &Motley.cursor,
+                    (Shader[2]){Motley.shaders[0], Motley.shaders[1]});
+
+        if (DrawNewTilemapMenu(&Motley.popupNew)) {
+            Motley.tilemap[Motley.tilemapCount++] =
+                InitTilemap(&Motley.popupNew, &Motley.tilemapArena);
+        }
+        if (DrawPopupLoad(&Motley.popupLoad)) {
+            Motley.tilemap[Motley.tilemapCount++] =
+                InitTilemapFromFile(&Motley.popupLoad, &Motley.tilemapArena);
+        }
+
         EndDrawing();
     }
 
-    CloseMotley();
+    free(Motley.tilemapArena.buffer);
+    free(Motley.undoArena.buffer);
     CloseWindow();
 }

@@ -130,18 +130,19 @@ void UpdateTileset(TilesetState *state, const Tilemap *map) {
         (v2){map->Tileset.width * state->Scale, map->Tileset.height * state->Scale + 24};
 }
 
-void DrawTileset(TilesetState *state, const Tilemap *map, TilemapCursor *cursor) {
+void DrawTileset(TilesetState *state, const Tilemap *map, TilemapCursor *cursor,
+                 Shader shaders[2]) {
     if (!state->Window.Active || !map->Window.Active) return;
 
     UpdateWindow(&state->Window);
 
     v2 tAnchor = Vector2Add(state->Window.Anchor, (v2){0, 24});
 
-    BeginShaderMode(FgTilemap);
+    BeginShaderMode(shaders[0]);
     DrawTextureEx(map->Tileset, tAnchor, 0.0f, state->Scale, map->Palette[cursor->FG]);
     EndShaderMode();
 
-    BeginShaderMode(BgTilemap);
+    BeginShaderMode(shaders[1]);
     DrawTextureEx(map->Tileset, tAnchor, 0.0f, state->Scale, map->Palette[cursor->BG]);
     EndShaderMode();
 
