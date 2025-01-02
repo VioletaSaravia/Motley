@@ -32,7 +32,8 @@
         "unordered_map": "c",
         "unordered_set": "c",
         "vector": "c",
-        "cursor.h": "c"
+        "cursor.h": "c",
+        "complex": "c"
     },
     "makefile.configureOnOpen": true
 }

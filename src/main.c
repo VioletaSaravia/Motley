@@ -84,9 +84,9 @@ i32 main() {
         GameWindowControls(&window);
 
         // === UPDATE MOTLEY ===
-        for (u32 i = 0; i <= Motley.tilemapCount; i++) {
+        for (u32 i = 0; i < Motley.tilemapCount; i++) {
             UpdateTileCursor(&Motley.tilemap[i], &Motley.cursor, &Motley.toolbar);
-            UpdateBoxSelect(&Motley.tilemap[i], NULL, &Motley.cursor);
+            UpdateBoxSelect(&Motley.tilemap[i], &Motley.tilemap[i], &Motley.cursor);
         }
         UpdateToolbar(&Motley.toolbar);
         UpdateTileset(&Motley.tileset, Motley.tilemap);

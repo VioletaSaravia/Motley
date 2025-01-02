@@ -50,6 +50,11 @@ void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const Toolb
     }
 }
 
+struct {
+    TilemapLayer Data[MAX_LAYERS];
+    v2u          Start, End;
+} CopyData = {};
+
 void CopyBoxedTiles(const Tilemap* map, const TilemapCursor* cursor) {}
 
 void DeleteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
@@ -58,20 +63,29 @@ void DeleteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
     v2u to = {cursor->Box[0].x >= cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
               cursor->Box[0].y >= cursor->Box[1].y ? cursor->Box[0].y : cursor->Box[1].y};
 
-    for (u32 i = 0; i < MAX_LAYERS; i++) {
-        for (u32 x = from.x; x < to.x; x++) {
-            for (u32 y = from.y; y < to.y; y++) {
-                u32 coord                 = y * map->Size.x + x;
-                map->Layer[i].FG[coord]   = 0;
-                map->Layer[i].BG[coord]   = 0;
-                map->Layer[i].Tile[coord] = (v2u){};
-                map->Layer[i].Rot[coord]  = ROT_UP;
-            }
+    for (u32 x = from.x; x < to.x; x++) {
+        for (u32 y = from.y; y < to.y; y++) {
+            u32 coord                 = y * map->Size.x + x;
+            map->Layer[0].FG[coord]   = 0;
+            map->Layer[0].BG[coord]   = 0;
+            map->Layer[0].Tile[coord] = (v2u){};
+            map->Layer[0].Rot[coord]  = ROT_UP;
         }
     }
 }
 
-void PasteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {}
+void PasteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
+    for (u32 x = CopyData.Start.x; x < CopyData.End.x; x++) {
+        for (u32 y = CopyData.Start.y; x < CopyData.End.y; y++) {
+            u32 coordTo                 = y * map->Size.x + x;
+            u32 coordFrom               = y * (CopyData.End.x - CopyData.Start.x) + x;
+            map->Layer[0].Tile[coordTo] = CopyData.Data[0].Tile[coordFrom];
+            map->Layer[0].FG[coordTo]   = CopyData.Data[0].FG[coordFrom];
+            map->Layer[0].BG[coordTo]   = CopyData.Data[0].BG[coordFrom];
+            map->Layer[0].Rot[coordTo]  = CopyData.Data[0].Rot[coordFrom];
+        }
+    }
+}
 
 void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar) {
     if (!map->Window.Active || GlobalGuiState.Editing || GlobalGuiState.Moving) return;
@@ -99,6 +113,7 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
 
     // ===== PALETTE BUTTONS =====
     if (IsKeyPressed(KEY_FIVE)) map->SelectedLayer = map->SelectedLayer + 1 % MAX_LAYERS;
+
     if (IsActionPressed(ACTION_LEFT) && cursor->Selected.x != 0) cursor->Selected.x -= 1;
     if (IsActionPressed(ACTION_RIGHT) &&
         cursor->Selected.x < map->Tileset.width / map->tileSize.x - 1)
@@ -132,7 +147,6 @@ void UpdateBoxSelect(Tilemap* mapFrom, Tilemap* mapTo, TilemapCursor* cursor) {
     v2  tAnchor = Vector2Add(mapFrom->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT});
     v2u hoveredTile = (v2u){(GetMouseX() - tAnchor.x) / mapFrom->tileSize.x,
                             (GetMouseY() - tAnchor.y) / mapFrom->tileSize.y};
-
     if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
         cursor->State  = CURSOR_STATE_BOXING;
         cursor->Box[0] = hoveredTile;
@@ -153,13 +167,13 @@ void UpdateBoxSelect(Tilemap* mapFrom, Tilemap* mapTo, TilemapCursor* cursor) {
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_C) && cursor->State == CURSOR_STATE_BOXED) {
         cursor->State = CURSOR_STATE_SINGLE;
 
-        CopyBoxedTiles(mapFrom, cursor);
+        // CopyBoxedTiles(mapFrom, cursor);
     }
 
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_X) && cursor->State == CURSOR_STATE_BOXED) {
         cursor->State = CURSOR_STATE_SINGLE;
 
-        CopyBoxedTiles(mapFrom, cursor);
+        // CopyBoxedTiles(mapFrom, cursor);
         DeleteBoxedTiles(mapFrom, cursor);
     }
 
