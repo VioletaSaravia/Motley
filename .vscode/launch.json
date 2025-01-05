@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "C/C++: gcc.exe build and run active file",
+            "name": "Build and run raylib project",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}\\build\\win\\${workspaceFolderBasename}.exe",
@@ -27,10 +27,10 @@
             "preLaunchTask": "C/C++: gcc.exe debug build active file"
         },
         {
-            "name": "C/C++: gcc.exe build and debug active file",
+            "name": "Build and debug raylib project",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/win/${workspaceFolderBasename}",
+            "program": "${workspaceFolder}/build/win/${workspaceFolderBasename}.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -51,6 +51,32 @@
                 }
             ],
             "preLaunchTask": "C/C++: gcc.exe debug build active file"
+        },
+        {
+            "name": "C/C++: emcc.exe build and debug active file",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "build\\win\\${workspaceFolderBasename}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "C/C++: emcc.exe build active file"
         }
     ],
     "version": "2.0.0"

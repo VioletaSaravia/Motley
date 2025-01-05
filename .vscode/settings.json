@@ -33,7 +33,10 @@
         "unordered_set": "c",
         "vector": "c",
         "cursor.h": "c",
-        "complex": "c"
+        "complex": "c",
+        "emscripten.h": "c",
+        "popup_load.h": "c",
+        "motley.h": "c"
     },
     "makefile.configureOnOpen": true
 }
