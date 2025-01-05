@@ -1,8 +1,5 @@
-#include "shared.h"
-
-#ifdef MOTLEY
 #include "motley.h"
-#endif
+#include "shared.h"
 
 #ifdef PLATFORM_WEB
 #include <emscripten.h>

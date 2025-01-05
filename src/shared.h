@@ -350,6 +350,7 @@ bool IsActionPressed(Action action) {
         }
 
     OUTER_CONTINUE:
+        continue;
     }
     return false;
 }
@@ -488,7 +489,7 @@ void Execute(const char* cmd) {
 
     while (fgets(path, sizeof(path), fp) != NULL) {
         path[strcspn(path, "\n")] = '\0';
-        printf(path);
+        printf("%s", path);
     }
 }
 

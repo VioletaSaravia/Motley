@@ -569,7 +569,7 @@ bool SaveTilemap(Tilemap* this, const char* path) {
     fprintf(file, "%d %d\n", this->tileSize.x, this->tileSize.y);
 
     for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
-        fprintf(file, "%.2f %.2f ", this->Layer[0].Tile[i].x, this->Layer[0].Tile[i].y);
+        fprintf(file, "%u %u ", this->Layer[0].Tile[i].x, this->Layer[0].Tile[i].y);
     }
     fprintf(file, "\n");
 
@@ -588,7 +588,7 @@ bool SaveTilemap(Tilemap* this, const char* path) {
     }
     fprintf(file, "\n");
 
-    fprintf(file, this->TilesetPath);
+    fprintf(file, "%s", this->TilesetPath);
     fprintf(file, "\n");
 
     fprintf(file, "%u\n", this->PaletteSize);
@@ -628,7 +628,7 @@ Tilemap LoadTilemap(PopupLoadState* state, Arena* arena) {
     this.Layer[0].Rot  = AALLOC(arena, u8, tileCount);
 
     for (u32 i = 0; i < tileCount; i++) {
-        fscanf(file, "%f %f", &this.Layer[0].Tile[i].x, &this.Layer[0].Tile[i].y);
+        fscanf(file, "%u %u", &this.Layer[0].Tile[i].x, &this.Layer[0].Tile[i].y);
     }
 
     for (u32 i = 0; i < tileCount; i++) {
@@ -875,6 +875,7 @@ void DrawToolbar(ToolbarState* state, PopupNewState* newTilemapMenuState,
         }
     }
 END:
+    return;
 }
 
 TilesetState InitTilesetWindow(v2 pos) {
