@@ -1,3 +1,6 @@
+
+
+#include "flappy.h"
 #include "motley.h"
 #include "shared.h"
 
@@ -5,14 +8,14 @@
 #include <emscripten.h>
 #endif
 
-static WindowOptions window = {.screenWidth  = 1024,
-                               .screenHeight = 768,
-                               .targetFPS    = 0,
-                               .title        = "Motley",
-                               .ConfigFlags  = 0,
-                               .WindowFlags  = FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT,
-                               .iconPath     = "",
-                               .guiStylePath = ""};
+WindowOptions window = {.screenWidth  = 800,
+                        .screenHeight = 800,
+                        .targetFPS    = 0,
+                        .title        = "Motley",
+                        .ConfigFlags  = FLAG_MSAA_4X_HINT,
+                        .WindowFlags  = FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT,
+                        .iconPath     = "",
+                        .guiStylePath = ""};
 
 void Init() {
     InitGameWindow(&window);
@@ -25,8 +28,8 @@ void Update() {
 }
 
 void Close() {
-    CloseMotley();
     CloseWindow();
+    CloseMotley();
 }
 
 i32 main() {

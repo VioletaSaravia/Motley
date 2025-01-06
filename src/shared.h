@@ -63,7 +63,7 @@ typedef struct {
 typedef struct {
     bool started, enabled;
     f32  freq, damp, resp;  // NOTE: Do not set manually, use f32dSet()
-    f32  _xp, _yd, _y;      // _y == current value
+    f32  _xp, _yd, _y;      // _y == current value, _xp == target
     f32  _k1, _k2, _k3;
 } f32d;
 
@@ -103,7 +103,7 @@ void f32dUpdate(f32d* this, f32 x) {
     f64 delta = GetFrameTime();
 
     if (!this->enabled || delta == 0.0f) {
-        this->_y = x;
+        // this->_y = x;
         return;
     }
 
@@ -116,6 +116,8 @@ void f32dUpdate(f32d* this, f32 x) {
     this->_yd =
         this->_yd + delta * (x + this->_k3 * xd - this->_y - this->_k1 * this->_yd) / k2_stable;
 }
+
+void f32dContinue(f32d* this) { f32dUpdate(this, this->_xp); }
 
 v2 PolarToCartesian(f32 radius, f32 angle) {
     return (v2){radius * cos(angle), radius * sin(angle)};
@@ -221,6 +223,7 @@ typedef struct {
 void InitGameWindow(WindowOptions* opts) {
     SetConfigFlags(opts->ConfigFlags);
     GuiLoadStyle(opts->guiStylePath);
+    SetTargetFPS(opts->targetFPS);
 
     InitWindow(opts->screenWidth, opts->screenHeight, opts->title);
     SetWindowState(opts->WindowFlags);

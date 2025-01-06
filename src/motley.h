@@ -18,10 +18,6 @@ TODO:
 - [X] Action mods
 */
 
-#ifndef MAX_TILEMAPS
-#define MAX_TILEMAPS 8
-#endif
-
 static struct {
     bool Editing;
     bool Moving;
@@ -34,122 +30,6 @@ typedef struct {
     bool        Moving;
     const char* Title;
 } Window;
-
-typedef struct {
-    v2u* Tile;
-    u8*  FG;
-    u8*  BG;
-    u8*  Rot;
-} TilemapLayer;
-
-#define MAX_LAYERS 2
-
-typedef struct {
-    Window Window;
-
-    v2u Size;
-    v2u tileSize;
-
-    TilemapLayer Layer[MAX_LAYERS];
-    u8           SelectedLayer;
-
-    Texture     Tileset;
-    const char* TilesetPath;
-    Color*      Palette;  // 0 = BLANK, 1 = WHITE, 2 = BLACK, 3+ = COLORS
-    u32         PaletteSize;
-} Tilemap;
-
-typedef struct {
-    Window Window;
-
-    bool TilesetPathEditMode;
-    char TilesetPathText[256];
-    bool tileSizeXEditMode;
-    i32  tileSizeXValue;
-    bool tileSizeYEditMode;
-    i32  tileSizeYValue;
-    bool PalettePathEditMode;
-    char PalettePathText[256];
-    bool mapSizeXEditMode;
-    i32  mapSizeXValue;
-    bool mapSizeYEditMode;
-    i32  mapSizeYValue;
-
-} PopupNewState;
-
-typedef enum { CURSOR_STATE_SINGLE, CURSOR_STATE_BOXING, CURSOR_STATE_BOXED } CursorState;
-
-typedef struct {
-    v2i  Selected;
-    u8   FG;
-    u8   BG;
-    u8   Rot;
-    bool InMap;
-    u32  CurrentTilemap;
-
-    CursorState State;
-
-    v2u Box[2];
-    v2* BoxSelection;
-
-} TilemapCursor;
-
-typedef enum TileRotation { ROT_UP, ROT_RIGHT, ROT_BOT, ROT_LEFT } TileRotation;
-
-typedef struct {
-    Vector2 anchor01;
-
-    Rectangle ScrollPanelScrollView;
-    Vector2   ScrollPanelScrollOffset;
-    Vector2   ScrollPanelBoundsOffset;
-    bool      RebindButtons[ACTION_COUNT * MAX_KEYBINDS];
-
-    Rectangle layoutRecs[4];
-} KeybindMenuState;
-
-typedef struct {
-    Window Window;
-
-    bool TilemapPathTextBoxEditMode;
-    char TilemapPathTextBoxText[256];
-
-} PopupLoadState;
-
-typedef struct {
-    Window Window;
-
-    bool PaintTileActive;
-    bool PaintFgActive;
-    bool PaintBgActive;
-    bool PaintRotActive;
-
-    Color ColorPickerFgValue;
-    Color ColorPickerBgValue;
-
-} ToolbarState;
-
-typedef struct {
-    Window Window;
-    f32    Scale;
-} TilesetState;
-
-typedef struct {
-    ToolbarState  toolbar;
-    TilesetState  tileset;
-    TilemapCursor cursor;
-
-    PopupNewState  popupNew;
-    PopupLoadState popupLoad;
-
-    Arena   tilemapArena;
-    Tilemap tilemap[MAX_TILEMAPS];
-    u8      tilemapCount;
-
-    Arena undoArena;
-
-    Texture bg;
-    Shader  shaders[5];
-} Motley;
 
 Window InitWindowBox(const char* title, v2 size) {
     return (Window){.Active = true,
@@ -186,6 +66,122 @@ void UpdateWindow(Window* state) {
         GlobalGuiState.Editing = false;
     }
 }
+
+typedef struct {
+    v2u* Tile;
+    u8*  FG;
+    u8*  BG;
+    u8*  Rot;
+} TilemapLayer;
+
+#define MAX_LAYERS 2
+
+typedef struct {
+    Window Window;
+
+    v2u Size;
+    v2u tileSize;
+
+    TilemapLayer Layer[MAX_LAYERS];
+    u8           SelectedLayer;
+
+    Texture     Tileset;
+    const char* TilesetPath;
+    Color*      Palette;  // 0 = BLANK, 1 = WHITE, 2 = BLACK, 3+ = COLORS
+    u32         PaletteSize;
+} Tilemap;
+
+typedef enum { CURSOR_STATE_SINGLE, CURSOR_STATE_BOXING, CURSOR_STATE_BOXED } CursorState;
+
+typedef struct {
+    v2i  Selected;
+    u8   FG;
+    u8   BG;
+    u8   Rot;
+    bool InMap;
+    u32  CurrentTilemap;
+
+    CursorState State;
+
+    v2u Box[2];
+    v2* BoxSelection;
+
+} TilemapCursor;
+
+typedef enum TileRotation { ROT_UP, ROT_RIGHT, ROT_BOT, ROT_LEFT } TileRotation;
+
+typedef struct {
+    Window Window;
+
+    bool TilesetPathEditMode;
+    char TilesetPathText[256];
+    bool tileSizeXEditMode;
+    i32  tileSizeXValue;
+    bool tileSizeYEditMode;
+    i32  tileSizeYValue;
+    bool PalettePathEditMode;
+    char PalettePathText[256];
+    bool mapSizeXEditMode;
+    i32  mapSizeXValue;
+    bool mapSizeYEditMode;
+    i32  mapSizeYValue;
+
+} PopupNewState;
+
+typedef struct {
+    Vector2 anchor01;
+
+    Rectangle ScrollPanelScrollView;
+    Vector2   ScrollPanelScrollOffset;
+    Vector2   ScrollPanelBoundsOffset;
+    bool      RebindButtons[ACTION_COUNT * MAX_KEYBINDS];
+
+    Rectangle layoutRecs[4];
+} KeybindMenuState;
+
+typedef struct {
+    Window Window;
+
+    bool TilemapPathTextBoxEditMode;
+    char TilemapPathTextBoxText[256];
+
+} PopupLoadState;
+
+typedef struct {
+    Window Window;
+
+    bool PaintTileActive;
+    bool PaintFgActive;
+    bool PaintBgActive;
+    bool PaintRotActive;
+} ToolbarState;
+
+typedef struct {
+    Window Window;
+    f32    Scale;
+} TilesetState;
+
+#define MAX_TILEMAPS 8
+
+typedef struct {
+    ToolbarState  toolbar;
+    TilesetState  tileset;
+    TilemapCursor cursor;
+
+    PopupNewState  popupNew;
+    PopupLoadState popupLoad;
+
+    Arena   tilemapArena;
+    Tilemap tilemap[MAX_TILEMAPS];
+    u8      tilemapCount;
+
+    Arena undoArena;
+
+    Texture bg;
+    Shader  shaders[5];
+} Motley;
+
+Motley M;
 
 KeybindMenuState NewKeybindMenu() {
     KeybindMenuState state = {};
@@ -318,15 +314,13 @@ void PasteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
 }
 
 void SetFgColor(u8 id, TilemapCursor* cursor, const Tilemap* map, ToolbarState* toolbar) {
-    u8 newFg                    = id % map->PaletteSize;
-    cursor->FG                  = newFg != cursor->BG ? newFg : ((newFg + 1) % map->PaletteSize);
-    toolbar->ColorPickerFgValue = map->Palette[cursor->FG];
+    u8 newFg   = id % map->PaletteSize;
+    cursor->FG = newFg != cursor->BG ? newFg : ((newFg + 1) % map->PaletteSize);
 }
 
 void SetBgColor(u8 id, TilemapCursor* cursor, const Tilemap* map, ToolbarState* toolbar) {
-    u8 newBg                    = id % map->PaletteSize;
-    cursor->BG                  = newBg != cursor->FG ? newBg : ((newBg + 1) % map->PaletteSize);
-    toolbar->ColorPickerBgValue = map->Palette[cursor->BG];
+    u8 newBg   = id % map->PaletteSize;
+    cursor->BG = newBg != cursor->FG ? newBg : ((newBg + 1) % map->PaletteSize);
 }
 
 void SwapColors(TilemapCursor* cursor) {
@@ -553,7 +547,6 @@ Tilemap InitTilemap(const PopupNewState* state, Arena* arena) {
     return map;
 }
 
-// TODO: Doesn't save layers other than the first one.
 bool SaveTilemap(Tilemap* this, const char* path) {
     if (GlobalGuiState.Editing) return false;
     if (!this->Window.Active || !(IsActionPressed(ACTION_SAVE))) return false;
@@ -568,25 +561,27 @@ bool SaveTilemap(Tilemap* this, const char* path) {
 
     fprintf(file, "%d %d\n", this->tileSize.x, this->tileSize.y);
 
-    for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
-        fprintf(file, "%u %u ", this->Layer[0].Tile[i].x, this->Layer[0].Tile[i].y);
-    }
-    fprintf(file, "\n");
+    for (u32 j = 0; j < MAX_LAYERS; j++) {
+        for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
+            fprintf(file, "%u %u ", this->Layer[j].Tile[i].x, this->Layer[j].Tile[i].y);
+        }
+        fprintf(file, "\n");
 
-    for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
-        fprintf(file, "%d ", this->Layer[0].FG[i]);
-    }
-    fprintf(file, "\n");
+        for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
+            fprintf(file, "%d ", this->Layer[j].FG[i]);
+        }
+        fprintf(file, "\n");
 
-    for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
-        fprintf(file, "%d ", this->Layer[0].BG[i]);
-    }
-    fprintf(file, "\n");
+        for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
+            fprintf(file, "%d ", this->Layer[j].BG[i]);
+        }
+        fprintf(file, "\n");
 
-    for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
-        fprintf(file, "%d ", this->Layer[0].Rot[i]);
+        for (u32 i = 0; i < this->Size.x * this->Size.y; i++) {
+            fprintf(file, "%d ", this->Layer[j].Rot[i]);
+        }
+        fprintf(file, "\n");
     }
-    fprintf(file, "\n");
 
     fprintf(file, "%s", this->TilesetPath);
     fprintf(file, "\n");
@@ -607,7 +602,6 @@ bool SaveTilemap(Tilemap* this, const char* path) {
     return true;
 }
 
-// TODO: Doesn't load layers other than the first one.
 Tilemap LoadTilemap(PopupLoadState* state, Arena* arena) {
     FILE* file = fopen(state->TilemapPathTextBoxText, "r");
     if (file == NULL) {
@@ -621,26 +615,22 @@ Tilemap LoadTilemap(PopupLoadState* state, Arena* arena) {
 
     fscanf(file, "%d %d", &this.tileSize.x, &this.tileSize.y);
 
-    u32 tileCount      = this.Size.x * this.Size.y;
-    this.Layer[0].Tile = AALLOC(arena, v2u, tileCount);
-    this.Layer[0].FG   = AALLOC(arena, u8, tileCount);
-    this.Layer[0].BG   = AALLOC(arena, u8, tileCount);
-    this.Layer[0].Rot  = AALLOC(arena, u8, tileCount);
+    u32 tileCount = this.Size.x * this.Size.y;
 
-    for (u32 i = 0; i < tileCount; i++) {
-        fscanf(file, "%u %u", &this.Layer[0].Tile[i].x, &this.Layer[0].Tile[i].y);
-    }
+    for (u32 j = 0; j < MAX_LAYERS; j++) {
+        this.Layer[j].Tile = AALLOC(arena, v2u, tileCount);
+        this.Layer[j].FG   = AALLOC(arena, u8, tileCount);
+        this.Layer[j].BG   = AALLOC(arena, u8, tileCount);
+        this.Layer[j].Rot  = AALLOC(arena, u8, tileCount);
 
-    for (u32 i = 0; i < tileCount; i++) {
-        fscanf(file, "%hhu", &this.Layer[0].FG[i]);
-    }
+        for (u32 i = 0; i < tileCount; i++)
+            fscanf(file, "%u %u", &this.Layer[j].Tile[i].x, &this.Layer[j].Tile[i].y);
 
-    for (u32 i = 0; i < tileCount; i++) {
-        fscanf(file, "%hhu", &this.Layer[0].BG[i]);
-    }
+        for (u32 i = 0; i < tileCount; i++) fscanf(file, "%hhu", &this.Layer[j].FG[i]);
 
-    for (u32 i = 0; i < tileCount; i++) {
-        fscanf(file, "%hhu", &this.Layer[0].Rot[i]);
+        for (u32 i = 0; i < tileCount; i++) fscanf(file, "%hhu", &this.Layer[j].BG[i]);
+
+        for (u32 i = 0; i < tileCount; i++) fscanf(file, "%hhu", &this.Layer[j].Rot[i]);
     }
 
     char tilesetPath[256];
@@ -783,12 +773,10 @@ bool DrawNewTilemapMenu(PopupNewState* state) {
 }
 
 ToolbarState InitToolbar(v2 anchor) {
-    ToolbarState state = {.PaintFgActive      = true,
-                          .PaintRotActive     = true,
-                          .PaintTileActive    = true,
-                          .PaintBgActive      = true,
-                          .ColorPickerFgValue = (Color){},
-                          .ColorPickerBgValue = (Color){}};
+    ToolbarState state = {.PaintFgActive   = true,
+                          .PaintRotActive  = true,
+                          .PaintTileActive = true,
+                          .PaintBgActive   = true};
 
     state.Window =
         (Window){.Active = true, .Anchor = anchor, .Size = (v2){136, 344}, .Title = "Toolbar"};
@@ -819,12 +807,6 @@ void DrawToolbar(ToolbarState* state, PopupNewState* newTilemapMenuState,
 
     UpdateWindow(&state->Window);
 
-    if (tilemap->Window.Active) {
-        // FIXME: Overrides colors with blank
-        // tilemap->Palette[cursor->FG] = state->ColorPickerFgValue;
-        // tilemap->Palette[cursor->BG] = state->ColorPickerBgValue;
-    }
-
     GuiLine((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 56, 104, 16}, "");
 
     if (GuiButton((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 32, 56, 24},
@@ -843,11 +825,6 @@ void DrawToolbar(ToolbarState* state, PopupNewState* newTilemapMenuState,
               PaintBgText, &state->PaintBgActive);
     GuiToggle((Rectangle){state->Window.Anchor.x + 104, state->Window.Anchor.y + 72, 24, 24},
               PaintRotText, &state->PaintRotActive);
-
-    GuiColorPicker((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 240, 96, 40},
-                   "", &state->ColorPickerFgValue);
-    GuiColorPicker((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 296, 96, 40},
-                   "", &state->ColorPickerBgValue);
 
     if (!tilemap->Window.Active) return;
 
@@ -871,10 +848,10 @@ void DrawToolbar(ToolbarState* state, PopupNewState* newTilemapMenuState,
             if (cursor->BG == i)
                 DrawRectangleLinesEx((Rectangle){r.x, r.y, r.width, r.height}, 3, YELLOW);
 
-            if (i++ >= tilemap->PaletteSize) goto END;
+            if (i++ >= tilemap->PaletteSize) goto OUTER_BREAK;
         }
     }
-END:
+OUTER_BREAK:
     return;
 }
 
@@ -933,8 +910,6 @@ void DrawTileset(TilesetState* state, const Tilemap* map, TilemapCursor* cursor,
     }
 }
 
-Motley M;
-
 void SetBackgroundColor(Motley* Motley, v3 fg, v3 bg) {
     SetShaderValue(Motley->shaders[4], GetShaderLocation(Motley->shaders[4], "color1"), &fg,
                    SHADER_UNIFORM_VEC3);
@@ -969,7 +944,7 @@ void UpdateMotley() {
     }
     UpdateToolbar(&M.toolbar);
     UpdateTileset(&M.tileset, M.tilemap);
-    SaveTilemap(M.tilemap, "tilemap.txt");  // TODO: Save popup
+    SaveTilemap(M.tilemap, "tilemap.txt");
 
     // === DRAW  ===
     BeginDrawing();
