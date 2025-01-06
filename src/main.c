@@ -20,16 +20,19 @@ WindowOptions window = {.screenWidth  = 800,
 void Init() {
     InitGameWindow(&window);
     InitMotley();
+    // InitFlappy();
 }
 
 void Update() {
     GameWindowControls(&window);
     UpdateMotley();
+    // UpdateFlappy();
 }
 
 void Close() {
     CloseWindow();
     CloseMotley();
+    // CloseFlappy();
 }
 
 i32 main() {

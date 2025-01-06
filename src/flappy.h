@@ -7,10 +7,10 @@
 
 /*
 TODO:
-- [] Start Over
-- [] Graphics
-- [] Sound
-- [] Difficulties
+- [ ] Start Over
+- [ ] Graphics
+- [ ] Sound
+- [ ] Difficulties
 
 FIXME:
 - [] Rotating animation
