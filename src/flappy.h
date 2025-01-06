@@ -13,7 +13,7 @@ TODO:
 - [ ] Difficulties
 
 FIXME:
-- [] Rotating animation
+- [ ] Rotating animation
 */
 
 struct Flappy {
