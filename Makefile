@@ -1,7 +1,7 @@
 PLATFORM = $(if $(filter Windows_NT,$(OS)),win,linux)
 
 CC = gcc
-CFLAGS = -O0 -Iinclude -Wall -Wextra -std=c11
+CFLAGS = -O0 -Iinclude -Wall -Wextra #-std=c11
 LDFLAGS = -Llib -l"raylib.$(PLATFORM)"
 
 LINUX_CC = gcc
@@ -12,13 +12,13 @@ WEB_CC = emcc
 all: run-$(PLATFORM)
 
 build-linux:
-	$(CC) src/main.c $(CFLAGS) $(LDFLAGS) -lm -ldl -lGL -lpthread -lX11 -o build/linux/motley -Wl,-rpath=lib/
+	$(CC) src/main.c $(CFLAGS) -Llib -l"raylib.linux" -lm -ldl -lGL -lpthread -lX11 -o build/linux/motley -Wl,-rpath=lib/
 
 run-linux: build-linux
 	./build/linux/motley
 
 build-win:
-	$(CC) ./src/main.c $(CFLAGS) $(LDFLAGS) -lwinmm -lopengl32 -lgdi32 -o build/win/motley
+	$(CC) ./src/main.c $(CFLAGS) -Llib -l"raylib.win" -lwinmm -lopengl32 -lgdi32 -o build/win/motley
 
 run-win: build-win
 	./build/win/motley

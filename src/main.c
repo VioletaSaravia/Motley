@@ -7,7 +7,7 @@
 #endif
 
 WindowOptions window = {.screenWidth  = 800,
-                        .screenHeight = 800,
+                        .screenHeight = 640,
                         .targetFPS    = 0,
                         .title        = "Motley",
                         .ConfigFlags  = FLAG_MSAA_4X_HINT,

@@ -12,7 +12,8 @@ FIXME:
 
 TODO:
 - Undo
-- [3/4] Copy/Cut/Paste Regions
+- Redo GUI
+- [X] Copy/Cut/Paste Regions
 - Layer GUI
 - Palette picker
 - [X] Action mods
@@ -104,8 +105,7 @@ typedef struct {
     CursorState State;
 
     v2u Box[2];
-    v2* BoxSelection;
-
+    Arena CopyArena;
 } TilemapCursor;
 
 typedef enum TileRotation { ROT_UP, ROT_RIGHT, ROT_BOT, ROT_LEFT } TileRotation;
@@ -161,7 +161,14 @@ typedef struct {
     f32    Scale;
 } TilesetState;
 
+typedef struct {
+    v2u* From, To;
+    v2u Loc, Size;
+} EditEvent;
+
 #define MAX_TILEMAPS 8
+
+#define MAX_UNDO 64
 
 typedef struct {
     ToolbarState  toolbar;
@@ -176,6 +183,7 @@ typedef struct {
     u8      tilemapCount;
 
     Arena undoArena;
+    EditEvent undo[MAX_UNDO];
 
     Texture bg;
     Shader  shaders[5];
@@ -237,6 +245,14 @@ void RebindMenu(KeybindMenuState* state) {
     }
 }
 
+v2u GetHoveredTile(const Tilemap* map) {
+    v2  tAnchor = Vector2Add(map->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT});
+    return (v2u){
+	(GetMouseX() - tAnchor.x) / map->tileSize.x, 
+	(GetMouseY() - tAnchor.y) / map->tileSize.y
+    };
+}
+
 void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const ToolbarState* toolbar,
                     Shader shaders[2]) {
     SetMouseCursor(cursor->InMap && cursor->State != CURSOR_STATE_BOXING ? MOUSE_CURSOR_CROSSHAIR
@@ -249,8 +265,7 @@ void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const Toolb
     f32 rotation = toolbar->PaintRotActive ? cursor->Rot * 90.0f : 0.0f;
 
     v2  tAnchor     = Vector2Add(map->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT});
-    v2u hoveredTile = (v2u){(GetMouseX() - tAnchor.x) / map->tileSize.x,
-                            (GetMouseY() - tAnchor.y) / map->tileSize.y};
+    v2u hoveredTile = GetHoveredTile(map);
     v2  halfTile    = {map->tileSize.x * 0.5f, map->tileSize.y * 0.5f};
 
     if (toolbar->PaintFgActive) {
@@ -278,10 +293,52 @@ void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const Toolb
 
 struct {
     TilemapLayer Data[MAX_LAYERS];
-    v2u          Start, End;
+    v2u          Len;
 } CopyData = {};
 
-void CopyBoxedTiles(const Tilemap* map, const TilemapCursor* cursor) {}
+void CopyBoxedTiles(const Tilemap* map, const TilemapCursor* cursor) {
+    if (CopyData.Data[0].Tile) free(CopyData.Data[0].Tile);
+    if (CopyData.Data[0].FG) free(CopyData.Data[0].FG);
+    if (CopyData.Data[0].BG) free(CopyData.Data[0].BG);
+    if (CopyData.Data[0].Rot) free(CopyData.Data[0].Rot);
+
+    v2u startBox = (v2u) {
+	    cursor->Box[0].x < cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
+	    cursor->Box[0].y < cursor->Box[1].y ? cursor->Box[0].y : cursor->Box[1].y,
+    };
+    v2u endBox = (v2u) {
+	    cursor->Box[0].x >= cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
+	    cursor->Box[0].y >= cursor->Box[1].y ? cursor->Box[0].y : cursor->Box[1].y,
+    };
+
+    CopyData.Len = (v2u) { endBox.x - startBox.x, endBox.y - startBox.y };
+
+    u32 size = CopyData.Len.x * CopyData.Len.y;
+    CopyData.Data[0].Tile = MALLOC_T(v2u, size);
+    CopyData.Data[0].FG   = MALLOC_T(u8, size);
+    CopyData.Data[0].BG   = MALLOC_T(u8, size);
+    CopyData.Data[0].Rot  = MALLOC_T(u8, size);
+
+    // Crashes when cycling halfway through hehe
+    // CopyData.Data[0].Tile = AALLOC(&cursor->CopyArena, v2u, size);
+    // CopyData.Data[0].FG   = AALLOC(&cursor->CopyArena, u8, size);
+    // CopyData.Data[0].BG   = AALLOC(&cursor->CopyArena, u8, size);
+    // CopyData.Data[0].Rot  = AALLOC(&cursor->CopyArena, u8, size);
+
+	
+    for (u32 y = startBox.y; y < endBox.y; y++) {
+	for (u32 x = startBox.x; x < endBox.x; x++) {
+	    u32 toTile = (y - startBox.y) * CopyData.Len.x + (x - startBox.x);
+	    u32 fromTile = y * map->Size.x + x;
+	    printf("Copying from %u to %u\n", fromTile, toTile);
+
+	    CopyData.Data[0].Tile[toTile] = map->Layer[0].Tile[fromTile];
+	    CopyData.Data[0].FG[toTile]   = map->Layer[0].FG[fromTile];
+	    CopyData.Data[0].BG[toTile]   = map->Layer[0].BG[fromTile];
+	    CopyData.Data[0].Rot[toTile]  = map->Layer[0].Rot[fromTile];
+	}
+    }
+}
 
 void DeleteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
     v2u from = {cursor->Box[0].x < cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
@@ -301,10 +358,16 @@ void DeleteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
 }
 
 void PasteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
-    for (u32 x = CopyData.Start.x; x < CopyData.End.x; x++) {
-        for (u32 y = CopyData.Start.y; x < CopyData.End.y; y++) {
-            u32 coordTo                 = y * map->Size.x + x;
-            u32 coordFrom               = y * (CopyData.End.x - CopyData.Start.x) + x;
+    v2u hoveredTile = GetHoveredTile(map);
+
+    for (u32 x = 0; x < CopyData.Len.x; x++) {
+        for (u32 y = 0; y < CopyData.Len.y; y++) {
+	    if (hoveredTile.y + y >= map->Size.y) continue;
+	    if (hoveredTile.x + x >= map->Size.x) continue;
+
+            u32 coordTo                 = (hoveredTile.y + y) * map->Size.x + (hoveredTile.x + x);
+            u32 coordFrom               = y * (CopyData.Len.x) + x;
+
             map->Layer[0].Tile[coordTo] = CopyData.Data[0].Tile[coordFrom];
             map->Layer[0].FG[coordTo]   = CopyData.Data[0].FG[coordFrom];
             map->Layer[0].BG[coordTo]   = CopyData.Data[0].BG[coordFrom];
@@ -365,12 +428,10 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
     if (IsActionPressed(ACTION_DOWN) &&
         cursor->Selected.y < map->Tileset.height / map->tileSize.y - 1)
         cursor->Selected.y += 1;
+
     if (IsKeyPressed(KEY_R)) cursor->Rot = (cursor->Rot + 1) % 4;
-
     if (IsKeyPressed(KEY_F)) SetFgColor(cursor->FG + 1, cursor, map, toolbar);
-
     if (IsKeyPressed(KEY_B)) SetBgColor(cursor->BG + 1, cursor, map, toolbar);
-
     if (IsKeyPressed(KEY_G)) SwapColors(cursor);
 }
 
@@ -411,8 +472,8 @@ void UpdateBoxSelect(Tilemap* mapFrom, Tilemap* mapTo, TilemapCursor* cursor) {
         cursor->State = CURSOR_STATE_SINGLE;
     }
 
-    if (IsActionPressed(ACTION_PASTE) && cursor->BoxSelection &&
-        cursor->State != CURSOR_STATE_BOXING) {
+    if (IsActionPressed(ACTION_PASTE) && cursor->State != CURSOR_STATE_BOXING) {
+	    printf("HELLO\n");
         PasteBoxedTiles(mapTo, cursor);
     }
 }
@@ -921,7 +982,7 @@ void InitMotley() {
     M = (Motley){
         .toolbar   = InitToolbar((v2){GetScreenWidth() * 0.025f, GetScreenHeight() * 0.05f}),
         .tileset   = InitTilesetWindow((v2){GetScreenWidth() * 0.025f, GetScreenHeight() * 0.6f}),
-        .cursor    = (TilemapCursor){.FG = 2, .BG = 0},
+        .cursor    = (TilemapCursor){.FG = 2, .BG = 0, .CopyArena = InitArena(250 << 10)},
         .popupNew  = InitNewTilemapMenu(),
         .popupLoad = InitPopupLoad(),
         .tilemapArena = InitArena(250 << 10),
@@ -974,4 +1035,5 @@ void UpdateMotley() {
 void CloseMotley() {
     free(M.tilemapArena.buffer);
     free(M.undoArena.buffer);
+    free(M.cursor.CopyArena.buffer);
 }
