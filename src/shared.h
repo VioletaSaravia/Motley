@@ -183,8 +183,6 @@ Rectangle CheckOverlapRecs(Rectangle r1, Rectangle r2) {
 
 // === MEMORY ===
 
-#define DEFAULT_ARENA 1024
-
 typedef struct {
     u8* buffer;
     u64 offset;
@@ -192,7 +190,6 @@ typedef struct {
 } Arena;
 
 Arena InitArena(u64 size) {
-    if (!size) size = DEFAULT_ARENA;
     return (Arena){.buffer = MALLOC_T(u8, size), .offset = 0, .size = size};
 }
 

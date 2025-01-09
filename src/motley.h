@@ -378,13 +378,13 @@ void UpdateBoxSelect(Tilemap* mapFrom, Tilemap* mapTo, TilemapCursor* cursor) {
     if (IsActionPressed(ACTION_COPY) && cursor->State == CURSOR_STATE_BOXED) {
         cursor->State = CURSOR_STATE_SINGLE;
 
-        // CopyBoxedTiles(mapFrom, cursor);
+        CopyBoxedTiles(mapFrom, cursor);
     }
 
     if (IsActionPressed(ACTION_CUT) && cursor->State == CURSOR_STATE_BOXED) {
         cursor->State = CURSOR_STATE_SINGLE;
 
-        // CopyBoxedTiles(mapFrom, cursor);
+        CopyBoxedTiles(mapFrom, cursor);
         DeleteBoxedTiles(mapFrom, cursor);
     }
 
@@ -807,7 +807,7 @@ void DrawToolbar(ToolbarState* state, PopupNewState* newTilemapMenuState,
 
     UpdateWindow(&state->Window);
 
-    GuiLine((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 56, 104, 16}, "");
+    GuiLine((Rectangle){state->Window.Anchor.x + 12, state->Window.Anchor.y + 56, 116, 16}, NULL);
 
     if (GuiButton((Rectangle){state->Window.Anchor.x + 8, state->Window.Anchor.y + 32, 56, 24},
                   NewButtonText))
