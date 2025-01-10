@@ -3,20 +3,27 @@
 #include "shared.h"
 
 /*
-FIXME:
-- Optimize tile drawing shader
+FIXME 1.0:
 - [X] Fix layout error in color picker
 - [X] Fix layout error in tileset
 - [X] Fix layout error in tile cursor
 - [X] Add blank to colors' GUI
 
-TODO:
+TODO 1.0:
 - Undo
-- Redo GUI
 - [X] Copy/Cut/Paste Regions
-- Layer GUI
-- Palette picker
 - [X] Action mods
+- Exporting
+
+TODO 1.1:
+- ImgUI
+- Palette picker
+- Layer GUI
+- Optimize tile drawing shader
+- Rectangle draw
+- Tile offset?
+- Paint individual tile?
+- Freehand tiles?
 */
 
 static struct {
@@ -104,7 +111,7 @@ typedef struct {
 
     CursorState State;
 
-    v2u Box[2];
+    v2u   Box[2];
     Arena CopyArena;
 } TilemapCursor;
 
@@ -162,8 +169,8 @@ typedef struct {
 } TilesetState;
 
 typedef struct {
-    v2u* From, To;
-    v2u Loc, Size;
+    v2u *From, To;
+    v2u  Loc, Size;
 } EditEvent;
 
 #define MAX_TILEMAPS 8
@@ -182,7 +189,7 @@ typedef struct {
     Tilemap tilemap[MAX_TILEMAPS];
     u8      tilemapCount;
 
-    Arena undoArena;
+    Arena     undoArena;
     EditEvent undo[MAX_UNDO];
 
     Texture bg;
@@ -246,11 +253,9 @@ void RebindMenu(KeybindMenuState* state) {
 }
 
 v2u GetHoveredTile(const Tilemap* map) {
-    v2  tAnchor = Vector2Add(map->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT});
-    return (v2u){
-	(GetMouseX() - tAnchor.x) / map->tileSize.x, 
-	(GetMouseY() - tAnchor.y) / map->tileSize.y
-    };
+    v2 tAnchor = Vector2Add(map->Window.Anchor, (v2){0, RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT});
+    return (v2u){(GetMouseX() - tAnchor.x) / map->tileSize.x,
+                 (GetMouseY() - tAnchor.y) / map->tileSize.y};
 }
 
 void DrawTileCursor(const Tilemap* map, const TilemapCursor* cursor, const ToolbarState* toolbar,
@@ -302,18 +307,18 @@ void CopyBoxedTiles(const Tilemap* map, const TilemapCursor* cursor) {
     if (CopyData.Data[0].BG) free(CopyData.Data[0].BG);
     if (CopyData.Data[0].Rot) free(CopyData.Data[0].Rot);
 
-    v2u startBox = (v2u) {
-	    cursor->Box[0].x < cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
-	    cursor->Box[0].y < cursor->Box[1].y ? cursor->Box[0].y : cursor->Box[1].y,
+    v2u startBox = (v2u){
+        cursor->Box[0].x < cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
+        cursor->Box[0].y < cursor->Box[1].y ? cursor->Box[0].y : cursor->Box[1].y,
     };
-    v2u endBox = (v2u) {
-	    cursor->Box[0].x >= cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
-	    cursor->Box[0].y >= cursor->Box[1].y ? cursor->Box[0].y : cursor->Box[1].y,
+    v2u endBox = (v2u){
+        cursor->Box[0].x >= cursor->Box[1].x ? cursor->Box[0].x : cursor->Box[1].x,
+        cursor->Box[0].y >= cursor->Box[1].y ? cursor->Box[0].y : cursor->Box[1].y,
     };
 
-    CopyData.Len = (v2u) { endBox.x - startBox.x, endBox.y - startBox.y };
+    CopyData.Len = (v2u){endBox.x - startBox.x, endBox.y - startBox.y};
 
-    u32 size = CopyData.Len.x * CopyData.Len.y;
+    u32 size              = CopyData.Len.x * CopyData.Len.y;
     CopyData.Data[0].Tile = MALLOC_T(v2u, size);
     CopyData.Data[0].FG   = MALLOC_T(u8, size);
     CopyData.Data[0].BG   = MALLOC_T(u8, size);
@@ -325,18 +330,17 @@ void CopyBoxedTiles(const Tilemap* map, const TilemapCursor* cursor) {
     // CopyData.Data[0].BG   = AALLOC(&cursor->CopyArena, u8, size);
     // CopyData.Data[0].Rot  = AALLOC(&cursor->CopyArena, u8, size);
 
-	
     for (u32 y = startBox.y; y < endBox.y; y++) {
-	for (u32 x = startBox.x; x < endBox.x; x++) {
-	    u32 toTile = (y - startBox.y) * CopyData.Len.x + (x - startBox.x);
-	    u32 fromTile = y * map->Size.x + x;
-	    printf("Copying from %u to %u\n", fromTile, toTile);
+        for (u32 x = startBox.x; x < endBox.x; x++) {
+            u32 toTile   = (y - startBox.y) * CopyData.Len.x + (x - startBox.x);
+            u32 fromTile = y * map->Size.x + x;
+            printf("Copying from %u to %u\n", fromTile, toTile);
 
-	    CopyData.Data[0].Tile[toTile] = map->Layer[0].Tile[fromTile];
-	    CopyData.Data[0].FG[toTile]   = map->Layer[0].FG[fromTile];
-	    CopyData.Data[0].BG[toTile]   = map->Layer[0].BG[fromTile];
-	    CopyData.Data[0].Rot[toTile]  = map->Layer[0].Rot[fromTile];
-	}
+            CopyData.Data[0].Tile[toTile] = map->Layer[0].Tile[fromTile];
+            CopyData.Data[0].FG[toTile]   = map->Layer[0].FG[fromTile];
+            CopyData.Data[0].BG[toTile]   = map->Layer[0].BG[fromTile];
+            CopyData.Data[0].Rot[toTile]  = map->Layer[0].Rot[fromTile];
+        }
     }
 }
 
@@ -357,21 +361,23 @@ void DeleteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
     }
 }
 
-void PasteBoxedTiles(Tilemap* map, const TilemapCursor* cursor) {
+void PasteBoxedTiles(Tilemap* map, const TilemapCursor* cursor, const ToolbarState* toolbar) {
     v2u hoveredTile = GetHoveredTile(map);
 
     for (u32 x = 0; x < CopyData.Len.x; x++) {
         for (u32 y = 0; y < CopyData.Len.y; y++) {
-	    if (hoveredTile.y + y >= map->Size.y) continue;
-	    if (hoveredTile.x + x >= map->Size.x) continue;
+            if (hoveredTile.y + y >= map->Size.y) continue;
+            if (hoveredTile.x + x >= map->Size.x) continue;
 
-            u32 coordTo                 = (hoveredTile.y + y) * map->Size.x + (hoveredTile.x + x);
-            u32 coordFrom               = y * (CopyData.Len.x) + x;
+            u32 coordTo   = (hoveredTile.y + y) * map->Size.x + (hoveredTile.x + x);
+            u32 coordFrom = y * (CopyData.Len.x) + x;
 
-            map->Layer[0].Tile[coordTo] = CopyData.Data[0].Tile[coordFrom];
-            map->Layer[0].FG[coordTo]   = CopyData.Data[0].FG[coordFrom];
-            map->Layer[0].BG[coordTo]   = CopyData.Data[0].BG[coordFrom];
-            map->Layer[0].Rot[coordTo]  = CopyData.Data[0].Rot[coordFrom];
+            if (toolbar->PaintTileActive)
+                map->Layer[0].Tile[coordTo] = CopyData.Data[0].Tile[coordFrom];
+            if (toolbar->PaintFgActive) map->Layer[0].FG[coordTo] = CopyData.Data[0].FG[coordFrom];
+            if (toolbar->PaintBgActive) map->Layer[0].BG[coordTo] = CopyData.Data[0].BG[coordFrom];
+            if (toolbar->PaintRotActive)
+                map->Layer[0].Rot[coordTo] = CopyData.Data[0].Rot[coordFrom];
         }
     }
 }
@@ -435,7 +441,8 @@ void UpdateTileCursor(Tilemap* map, TilemapCursor* cursor, ToolbarState* toolbar
     if (IsKeyPressed(KEY_G)) SwapColors(cursor);
 }
 
-void UpdateBoxSelect(Tilemap* mapFrom, Tilemap* mapTo, TilemapCursor* cursor) {
+void UpdateBoxSelect(Tilemap* mapFrom, Tilemap* mapTo, TilemapCursor* cursor,
+                     const ToolbarState* toolbar) {
     if (IsActionPressed(ACTION_COPY) && cursor->State == CURSOR_STATE_BOXED) {
         cursor->State = CURSOR_STATE_SINGLE;
 
@@ -473,8 +480,7 @@ void UpdateBoxSelect(Tilemap* mapFrom, Tilemap* mapTo, TilemapCursor* cursor) {
     }
 
     if (IsActionPressed(ACTION_PASTE) && cursor->State != CURSOR_STATE_BOXING) {
-	    printf("HELLO\n");
-        PasteBoxedTiles(mapTo, cursor);
+        PasteBoxedTiles(mapTo, cursor, toolbar);
     }
 }
 
@@ -971,6 +977,53 @@ void DrawTileset(TilesetState* state, const Tilemap* map, TilemapCursor* cursor,
     }
 }
 
+Image ExportTilemap(const Tilemap* map) {
+    Image result =
+        GenImageColor(map->Size.x * map->tileSize.x, map->Size.y * map->tileSize.y, BLANK);
+    Image tileset = LoadImageFromTexture(map->Tileset);
+
+    for (u32 y = 0; y < result.height; y++) {
+        for (u32 x = 0; x < result.width; x++) {
+            u32 mapCoord = (y / map->tileSize.y) * map->Size.x + (x / map->tileSize.x);
+
+            v2u tilesetPixel = {
+                map->Layer[0].Tile[mapCoord].x * map->tileSize.x + (x % map->tileSize.x),
+                map->Layer[0].Tile[mapCoord].y * map->tileSize.y + (y % map->tileSize.y)};
+
+            // TODO
+            switch (map->Layer[0].Rot[mapCoord]) {
+                case ROT_UP:
+                    break;
+
+                case ROT_RIGHT:
+                    break;
+
+                case ROT_BOT:
+                    break;
+
+                case ROT_LEFT:
+                    break;
+            }
+
+            Color color = GetImageColor(tileset, tilesetPixel.x, tilesetPixel.y);
+
+            for (u32 i = 0; i < 1 /* MAX_LAYERS */; i++) {
+                u8 fgColor = map->Layer[i].FG[mapCoord];
+                u8 bgColor = map->Layer[i].BG[mapCoord];
+
+                // Assumes the tileset is B&W
+                if (color.r == 0) {
+                    if (bgColor != 0) ImageDrawPixel(&result, x, y, map->Palette[bgColor]);
+                } else {
+                    if (fgColor != 0) ImageDrawPixel(&result, x, y, map->Palette[fgColor]);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
 void SetBackgroundColor(Motley* Motley, v3 fg, v3 bg) {
     SetShaderValue(Motley->shaders[4], GetShaderLocation(Motley->shaders[4], "color1"), &fg,
                    SHADER_UNIFORM_VEC3);
@@ -1001,11 +1054,13 @@ void InitMotley() {
 void UpdateMotley() {
     for (u32 i = 0; i < M.tilemapCount; i++) {
         UpdateTileCursor(&M.tilemap[i], &M.cursor, &M.toolbar);
-        UpdateBoxSelect(&M.tilemap[i], &M.tilemap[i], &M.cursor);
+        UpdateBoxSelect(&M.tilemap[i], &M.tilemap[i], &M.cursor, &M.toolbar);
     }
     UpdateToolbar(&M.toolbar);
     UpdateTileset(&M.tileset, M.tilemap);
+
     SaveTilemap(M.tilemap, "tilemap.txt");
+    if (IsActionPressed(ACTION_EXPORT)) ExportImage(ExportTilemap(&M.tilemap[0]), "tilemap.png");
 
     // === DRAW  ===
     BeginDrawing();
