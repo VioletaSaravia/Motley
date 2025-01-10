@@ -8,12 +8,13 @@ FIXME 1.0:
 - [X] Fix layout error in tileset
 - [X] Fix layout error in tile cursor
 - [X] Add blank to colors' GUI
+- Rotation exporting
 
 TODO 1.0:
 - Undo
 - [X] Copy/Cut/Paste Regions
 - [X] Action mods
-- Exporting
+- [X] Exporting
 
 TODO 1.1:
 - ImgUI
