@@ -8,7 +8,7 @@ FIXME 1.0:
 - [X] Fix layout error in tileset
 - [X] Fix layout error in tile cursor
 - [X] Add blank to colors' GUI
-- Rotation exporting
+- [X] Rotation exporting
 
 TODO 1.0:
 - Undo
@@ -324,12 +324,6 @@ void CopyBoxedTiles(const Tilemap* map, const TilemapCursor* cursor) {
     CopyData.Data[0].FG   = MALLOC_T(u8, size);
     CopyData.Data[0].BG   = MALLOC_T(u8, size);
     CopyData.Data[0].Rot  = MALLOC_T(u8, size);
-
-    // Crashes when cycling halfway through hehe
-    // CopyData.Data[0].Tile = AALLOC(&cursor->CopyArena, v2u, size);
-    // CopyData.Data[0].FG   = AALLOC(&cursor->CopyArena, u8, size);
-    // CopyData.Data[0].BG   = AALLOC(&cursor->CopyArena, u8, size);
-    // CopyData.Data[0].Rot  = AALLOC(&cursor->CopyArena, u8, size);
 
     for (u32 y = startBox.y; y < endBox.y; y++) {
         for (u32 x = startBox.x; x < endBox.x; x++) {
@@ -987,24 +981,29 @@ Image ExportTilemap(const Tilemap* map) {
         for (u32 x = 0; x < result.width; x++) {
             u32 mapCoord = (y / map->tileSize.y) * map->Size.x + (x / map->tileSize.x);
 
-            v2u tilesetPixel = {
-                map->Layer[0].Tile[mapCoord].x * map->tileSize.x + (x % map->tileSize.x),
-                map->Layer[0].Tile[mapCoord].y * map->tileSize.y + (y % map->tileSize.y)};
-
-            // TODO
+            v2u tilesetPixelOffset = {(x % map->tileSize.x), (y % map->tileSize.y)};
             switch (map->Layer[0].Rot[mapCoord]) {
                 case ROT_UP:
                     break;
 
-                case ROT_RIGHT:
+                case ROT_RIGHT:  // (y, m - 1 - x)
+                    tilesetPixelOffset =
+                        (v2u){tilesetPixelOffset.y, map->tileSize.x - 1 - tilesetPixelOffset.x};
+
+                case ROT_BOT:  // (m - 1 - x, n - 1 - y)
+                    tilesetPixelOffset = (v2u){map->tileSize.x - 1 - tilesetPixelOffset.x,
+                                               map->tileSize.y - 1 - tilesetPixelOffset.y};
                     break;
 
-                case ROT_BOT:
-                    break;
-
-                case ROT_LEFT:
+                case ROT_LEFT:  // (n - 1 - y, x)
+                    tilesetPixelOffset =
+                        (v2u){map->tileSize.y - 1 - tilesetPixelOffset.y, tilesetPixelOffset.x};
                     break;
             }
+
+            v2u tilesetPixel = {
+                map->Layer[0].Tile[mapCoord].x * map->tileSize.x + tilesetPixelOffset.x,
+                map->Layer[0].Tile[mapCoord].y * map->tileSize.y + tilesetPixelOffset.y};
 
             Color color = GetImageColor(tileset, tilesetPixel.x, tilesetPixel.y);
 
