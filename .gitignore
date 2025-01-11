@@ -7,6 +7,7 @@ mrmo.png
 
 # Build files
 build/
+.cache/
 
 # Web output
 *.html
