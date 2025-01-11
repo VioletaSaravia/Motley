@@ -1,8 +1,9 @@
 # Tools
 tools/rgui*
 
-# Non-distributable
+# Non-redistributable
 mrmox3.png
+mrmo.png
 
 # Build files
 build/

@@ -1,0 +1,18 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O0",
+      "-Iinclude",
+      "-Wall",
+      "-Wextra",
+      "-o",
+      "build/linux/motley",
+      "src/main.c"
+    ],
+    "directory": "/home/violeta/Dev/Motley",
+    "file": "/home/violeta/Dev/Motley/src/main.c",
+    "output": "/home/violeta/Dev/Motley/build/linux/motley"
+  }
+]
